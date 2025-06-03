@@ -14,8 +14,8 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
+	wasmkeeper "github.com/EuclidProtocol/vsld/keeper"
 	wasmibctesting "github.com/EuclidProtocol/vsld/tests/wasmibctesting"
-	wasmkeeper "github.com/EuclidProtocol/vsldasm/keeper"
 )
 
 // QueryMsg is used to encode query messages to ibc2 contract
