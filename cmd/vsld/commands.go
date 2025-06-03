@@ -33,7 +33,7 @@ import (
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	genutilcli "github.com/cosmos/cosmos-sdk/x/genutil/client/cli"
 
-	wasmcli "gitEuclidProtocol/vsld/x/wasm/client/cli"
+	wasmcli "github.com/EuclidProtocol/vsld/x/wasm/client/cli"
 
 	"github.com/EuclidProtocol/vsld/app"
 	"github.com/EuclidProtocol/vsld/x/wasm"

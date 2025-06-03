@@ -123,9 +123,9 @@ import (
 	stakingkeeper "github.com/cosmos/cosmos-sdk/x/staking/keeper"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 
-	wasmkeeper "EuclidProtocol/vsld/x/wasm/keeper"
+	wasmkeeper "github.com/EuclidProtocol/vsld/x/wasm/keeper"
 
-	"github.com/EuclidProtocol/vsld/vsld/x/wasm"
+	"github.com/EuclidProtocol/vsld/x/wasm"
 	wasmtypes "github.com/EuclidProtocol/vsld/x/wasm/types"
 )
 
@@ -616,7 +616,7 @@ func NewWasmApp(
 		app.TransferKeeper,
 		app.MsgServiceRouter(),
 		app.GRPCQueryRouter(),
-		wasmDir,
+		vsldir,
 		nodeConfig,
 		wasmtypes.VMConfig{},
 		wasmkeeper.BuiltInCapabilities(),
