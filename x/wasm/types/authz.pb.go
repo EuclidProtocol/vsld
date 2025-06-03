@@ -32,7 +32,7 @@ var (
 const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 
 // StoreCodeAuthorization defines authorization for wasm code upload.
-// Since: wasmd 0.42
+// Since: vsld 0.42
 type StoreCodeAuthorization struct {
 	// Grants for code upload
 	Grants []CodeGrant `protobuf:"bytes,1,rep,name=grants,proto3" json:"grants"`
@@ -77,7 +77,7 @@ func (m *StoreCodeAuthorization) XXX_DiscardUnknown() {
 var xxx_messageInfo_StoreCodeAuthorization proto.InternalMessageInfo
 
 // ContractExecutionAuthorization defines authorization for wasm execute.
-// Since: wasmd 0.30
+// Since: vsld 0.30
 type ContractExecutionAuthorization struct {
 	// Grants for contract executions
 	Grants []ContractGrant `protobuf:"bytes,1,rep,name=grants,proto3" json:"grants"`
@@ -122,7 +122,7 @@ func (m *ContractExecutionAuthorization) XXX_DiscardUnknown() {
 var xxx_messageInfo_ContractExecutionAuthorization proto.InternalMessageInfo
 
 // ContractMigrationAuthorization defines authorization for wasm contract
-// migration. Since: wasmd 0.30
+// migration. Since: vsld 0.30
 type ContractMigrationAuthorization struct {
 	// Grants for contract migrations
 	Grants []ContractGrant `protobuf:"bytes,1,rep,name=grants,proto3" json:"grants"`

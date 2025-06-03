@@ -1,5 +1,5 @@
-# docker build . -t cosmwasm/wasmd:latest
-# docker run --rm -it cosmwasm/wasmd:latest /bin/sh
+# docker build . -t cosmwasm/vsld:latest
+# docker run --rm -it cosmwasm/vsld:latest /bin/sh
 
 FROM golang:1.23.6-alpine AS go-builder
 
@@ -23,12 +23,12 @@ RUN sha256sum /lib/libwasmvm_muslc.x86_64.a | grep fcf85a9f4982fc496e75a84b01e6a
 # force it to use static lib (from above) not standard libgo_cosmwasm.so file
 RUN LEDGER_ENABLED=false BUILD_TAGS=muslc LINK_STATICALLY=true make build
 RUN echo "Ensuring binary is statically linked ..." \
-  && (file /code/build/wasmd | grep "statically linked")
+  && (file /code/build/vsld | grep "statically linked")
 
 # --------------------------------------------------------
 FROM alpine:3.18
 
-COPY --from=go-builder /code/build/wasmd /usr/bin/wasmd
+COPY --from=go-builder /code/build/vsld /usr/bin/vsld
 
 COPY docker/* /opt/
 RUN chmod +x /opt/*.sh
@@ -42,4 +42,4 @@ EXPOSE 26656
 # tendermint rpc
 EXPOSE 26657
 
-CMD ["/usr/bin/wasmd", "version"]
+CMD ["/usr/bin/vsld", "version"]

@@ -12,7 +12,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/CosmWasm/wasmd/x/wasm/types"
+	"github.com/EuclidProtocol/vsld/x/wasm/types"
 )
 
 var _ ibcapi.IBCModule = IBC2Handler{}

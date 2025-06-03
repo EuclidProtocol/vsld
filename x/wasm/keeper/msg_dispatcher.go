@@ -15,8 +15,8 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 
-	"github.com/CosmWasm/wasmd/x/wasm/keeper/wasmtesting"
-	"github.com/CosmWasm/wasmd/x/wasm/types"
+	"github.com/EuclidProtocol/vsld/x/wasm/keeper/wasmtesting"
+	"github.com/EuclidProtocol/vsld/x/wasm/types"
 )
 
 var (
@@ -25,7 +25,7 @@ var (
 	_ Messenger = SDKMessageHandler{}
 )
 
-// Messenger is an extension point for custom wasmd message handling
+// Messenger is an extension point for custom vsld message handling
 type Messenger interface {
 	// DispatchMsg encodes the wasmVM message and dispatches it.
 	DispatchMsg(ctx sdk.Context, contractAddr sdk.AccAddress, contractIBCPortID string, msg wasmvmtypes.CosmosMsg) (events []sdk.Event, data [][]byte, msgResponses [][]*codectypes.Any, err error)

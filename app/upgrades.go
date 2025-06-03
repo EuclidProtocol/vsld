@@ -5,9 +5,9 @@ import (
 
 	upgradetypes "cosmossdk.io/x/upgrade/types"
 
-	"github.com/CosmWasm/wasmd/app/upgrades"
-	"github.com/CosmWasm/wasmd/app/upgrades/noop"
-	v060 "github.com/CosmWasm/wasmd/app/upgrades/v060"
+	"github.com/EuclidProtocol/vsld/app/upgrades"
+	"github.com/EuclidProtocol/vsld/app/upgrades/noop"
+	v060 "github.com/EuclidProtocol/vsld/app/upgrades/v060"
 )
 
 // Upgrades list of chain upgrades

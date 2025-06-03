@@ -20,8 +20,8 @@ import (
 	stakingkeeper "github.com/cosmos/cosmos-sdk/x/staking/keeper"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 
-	"github.com/CosmWasm/wasmd/x/wasm/keeper/testdata"
-	wasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
+	"github.com/EuclidProtocol/vsld/x/wasm/keeper/testdata"
+	wasmtypes "github.com/EuclidProtocol/vsld/x/wasm/types"
 )
 
 type StakingInitMsg struct {

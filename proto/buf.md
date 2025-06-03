@@ -1,6 +1,6 @@
 # Protobufs
 
-This is the public protocol buffers API for [Wasmd](https://github.com/CosmWasm/wasmd).
+This is the public protocol buffers API for [vsld](https://github.com/EuclidProtocol/vsld).
 
 ## Download
 
@@ -10,7 +10,7 @@ The `buf` CLI comes with an export command. Use `buf export -h` for details
 
 Download cosmwasm protos for a commit:
 ```bash
-buf export buf.build/cosmwasm/wasmd:${commit} --output ./tmp
+buf export buf.build/EuclidProtocol/vsld:${commit} --output ./tmp
 ```
 
 Download all project protos:

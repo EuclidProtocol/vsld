@@ -13,7 +13,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 
-	"github.com/CosmWasm/wasmd/x/wasm/types"
+	"github.com/EuclidProtocol/vsld/x/wasm/types"
 )
 
 type Recurse struct {
@@ -272,7 +272,7 @@ func TestLimitRecursiveQueryGas(t *testing.T) {
 			},
 			expectQueriesFromContract: 10,
 			expectOutOfGas:            false,
-			expectError:               "query wasm contract failed", // Error we get from the contract instance doing the failing query, not wasmd
+			expectError:               "query wasm contract failed", // Error we get from the contract instance doing the failing query, not vsld
 			expectedGas:               GasWork2k + GasReturnHashed + 9*(GasWork2kDiscounted+GasReturnHashed) + GasError,
 		},
 	}

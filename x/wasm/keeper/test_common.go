@@ -72,9 +72,9 @@ import (
 	stakingkeeper "github.com/cosmos/cosmos-sdk/x/staking/keeper"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 
-	"github.com/CosmWasm/wasmd/x/wasm/keeper/testdata"
-	"github.com/CosmWasm/wasmd/x/wasm/keeper/wasmtesting"
-	"github.com/CosmWasm/wasmd/x/wasm/types"
+	"github.com/EuclidProtocol/vsld/x/wasm/keeper/testdata"
+	"github.com/EuclidProtocol/vsld/x/wasm/keeper/wasmtesting"
+	"github.com/EuclidProtocol/vsld/x/wasm/types"
 )
 
 var moduleBasics = module.NewBasicManager(
@@ -117,7 +117,7 @@ func MakeEncodingConfig(_ testing.TB) moduletestutil.TestEncodingConfig {
 	std.RegisterInterfaces(interfaceRegistry)
 
 	moduleBasics.RegisterInterfaces(interfaceRegistry)
-	// add wasmd types
+	// add vsld types
 	types.RegisterInterfaces(interfaceRegistry)
 	types.RegisterLegacyAminoCodec(amino)
 

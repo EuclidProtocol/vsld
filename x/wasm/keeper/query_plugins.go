@@ -23,7 +23,7 @@ import (
 	distributiontypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 
-	"github.com/CosmWasm/wasmd/x/wasm/types"
+	"github.com/EuclidProtocol/vsld/x/wasm/types"
 )
 
 type QueryHandler struct {
@@ -238,7 +238,7 @@ func BankQuerier(bankKeeper types.BankViewKeeper) func(ctx sdk.Context, request 
 				return nil, errorsmod.Wrap(sdkerrors.ErrNotFound, request.DenomMetadata.Denom)
 			}
 			res := wasmvmtypes.DenomMetadataResponse{
-				Metadata: ConvertSdkDenomMetadataToWasmDenomMetadata(denomMetadata),
+				Metadata: ConvertSdkDenomMetadataTovsldenomMetadata(denomMetadata),
 			}
 			return json.Marshal(res)
 		}
@@ -248,7 +248,7 @@ func BankQuerier(bankKeeper types.BankViewKeeper) func(ctx sdk.Context, request 
 				return nil, sdkerrors.ErrInvalidRequest
 			}
 			res := wasmvmtypes.AllDenomMetadataResponse{
-				Metadata: ConvertSdkDenomMetadatasToWasmDenomMetadatas(bankQueryRes.Metadatas),
+				Metadata: ConvertSdkDenomMetadatasTovsldenomMetadatas(bankQueryRes.Metadatas),
 				NextKey:  bankQueryRes.Pagination.NextKey,
 			}
 			return json.Marshal(res)
@@ -594,7 +594,7 @@ func sdkToFullDelegation(ctx sdk.Context, keeper types.StakingKeeper, distKeeper
 	delegationCoins := ConvertSdkCoinToWasmCoin(amount)
 
 	// FIXME: this is very rough but better than nothing...
-	// https://github.com/CosmWasm/wasmd/issues/282
+	// https://github.com/EuclidProtocol/vsld/issues/282
 	// if this (val, delegate) pair is receiving a redelegation, it cannot redelegate more
 	// otherwise, it can redelegate the full amount
 	// (there are cases of partial funds redelegated, but this is a start)
@@ -730,7 +730,7 @@ func DistributionQuerier(k types.DistributionKeeper) func(ctx sdk.Context, reque
 				return nil, err
 			}
 			return json.Marshal(wasmvmtypes.DelegationRewardsResponse{
-				Rewards: ConvertSDKDecCoinsToWasmDecCoins(got.Rewards),
+				Rewards: ConvertSDKDecCoinsTovsldecCoins(got.Rewards),
 			})
 		case req.DelegationTotalRewards != nil:
 			got, err := k.DelegationTotalRewards(ctx, &distributiontypes.QueryDelegationTotalRewardsRequest{
@@ -741,7 +741,7 @@ func DistributionQuerier(k types.DistributionKeeper) func(ctx sdk.Context, reque
 			}
 			return json.Marshal(wasmvmtypes.DelegationTotalRewardsResponse{
 				Rewards: ConvertSDKDelegatorRewardsToWasmRewards(got.Rewards),
-				Total:   ConvertSDKDecCoinsToWasmDecCoins(got.Total),
+				Total:   ConvertSDKDecCoinsTovsldecCoins(got.Total),
 			})
 		case req.DelegatorValidators != nil:
 			got, err := k.DelegatorValidators(ctx, &distributiontypes.QueryDelegatorValidatorsRequest{
@@ -763,15 +763,15 @@ func ConvertSDKDelegatorRewardsToWasmRewards(rewards []distributiontypes.Delegat
 	r := make([]wasmvmtypes.DelegatorReward, len(rewards))
 	for i, v := range rewards {
 		r[i] = wasmvmtypes.DelegatorReward{
-			Reward:           ConvertSDKDecCoinsToWasmDecCoins(v.Reward),
+			Reward:           ConvertSDKDecCoinsTovsldecCoins(v.Reward),
 			ValidatorAddress: v.ValidatorAddress,
 		}
 	}
 	return r
 }
 
-// ConvertSDKDecCoinsToWasmDecCoins convert sdk to wasmvm type
-func ConvertSDKDecCoinsToWasmDecCoins(src sdk.DecCoins) []wasmvmtypes.DecCoin {
+// ConvertSDKDecCoinsTovsldecCoins convert sdk to wasmvm type
+func ConvertSDKDecCoinsTovsldecCoins(src sdk.DecCoins) []wasmvmtypes.DecCoin {
 	r := make([]wasmvmtypes.DecCoin, len(src))
 	for i, v := range src {
 		r[i] = wasmvmtypes.DecCoin{
@@ -811,18 +811,18 @@ func ConvertToDenomsMetadataRequest(wasmRequest *wasmvmtypes.AllDenomMetadataQue
 	return ret
 }
 
-func ConvertSdkDenomMetadatasToWasmDenomMetadatas(metadata []banktypes.Metadata) []wasmvmtypes.DenomMetadata {
+func ConvertSdkDenomMetadatasTovsldenomMetadatas(metadata []banktypes.Metadata) []wasmvmtypes.DenomMetadata {
 	converted := make([]wasmvmtypes.DenomMetadata, len(metadata))
 	for i, m := range metadata {
-		converted[i] = ConvertSdkDenomMetadataToWasmDenomMetadata(m)
+		converted[i] = ConvertSdkDenomMetadataTovsldenomMetadata(m)
 	}
 	return converted
 }
 
-func ConvertSdkDenomMetadataToWasmDenomMetadata(metadata banktypes.Metadata) wasmvmtypes.DenomMetadata {
+func ConvertSdkDenomMetadataTovsldenomMetadata(metadata banktypes.Metadata) wasmvmtypes.DenomMetadata {
 	return wasmvmtypes.DenomMetadata{
 		Description: metadata.Description,
-		DenomUnits:  ConvertSdkDenomUnitsToWasmDenomUnits(metadata.DenomUnits),
+		DenomUnits:  ConvertSdkDenomUnitsTovsldenomUnits(metadata.DenomUnits),
 		Base:        metadata.Base,
 		Display:     metadata.Display,
 		Name:        metadata.Name,
@@ -832,7 +832,7 @@ func ConvertSdkDenomMetadataToWasmDenomMetadata(metadata banktypes.Metadata) was
 	}
 }
 
-func ConvertSdkDenomUnitsToWasmDenomUnits(denomUnits []*banktypes.DenomUnit) []wasmvmtypes.DenomUnit {
+func ConvertSdkDenomUnitsTovsldenomUnits(denomUnits []*banktypes.DenomUnit) []wasmvmtypes.DenomUnit {
 	converted := make([]wasmvmtypes.DenomUnit, len(denomUnits))
 	for i, u := range denomUnits {
 		converted[i] = wasmvmtypes.DenomUnit{

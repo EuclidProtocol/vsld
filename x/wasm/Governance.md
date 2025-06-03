@@ -24,13 +24,13 @@ We have added 15 new wasm specific proposal messages that cover the contract's l
 * `MsgAddCodeUploadParamsAddresses` - add addresses to code upload params.
 * `MsgStoreAndMigrateContract` - upload and migrate a wasm contract.
 
-## Wasmd Authorization Settings
+## vsld Authorization Settings
 
 Settings via sdk `params` module: 
 - `code_upload_access` - who can upload a wasm binary: `Nobody`, `Everybody`, `AnyOfAddresses`
 - `instantiate_default_permission` - platform default, who can instantiate a wasm binary when the code owner has not set it 
 
-See [params.go](https://github.com/CosmWasm/wasmd/blob/main/x/wasm/types/params.go)
+See [params.go](https://github.com/EuclidProtocol/vsld/blob/main/x/wasm/types/params.go)
 
 ### Init Params Via Genesis 
 
@@ -47,17 +47,17 @@ See [params.go](https://github.com/CosmWasm/wasmd/blob/main/x/wasm/types/params.
 
 The values can be updated via gov proposal `MsgUpdateParams`.
 
-### Update Params Via [MsgUpdateParams](https://github.com/CosmWasm/wasmd/blob/main/proto/cosmwasm/wasm/v1/tx.proto)
+### Update Params Via [MsgUpdateParams](https://github.com/EuclidProtocol/vsld/blob/main/proto/cosmwasm/wasm/v1/tx.proto)
 Example to submit a parameter change gov proposal:
 
 - First create a draft proposal using the interactive CLI
 ```sh
-wasmd tx gov draft-proposal
+vsld tx gov draft-proposal
 ```
 
 - Submit the proposal
 ```sh
-wasmd tx gov submit-proposal <proposal-json-file> --from validator --chain-id=testing -b block
+vsld tx gov submit-proposal <proposal-json-file> --from validator --chain-id=testing -b block
 ```
 #### Content examples
 * Disable wasm code uploads
@@ -165,14 +165,14 @@ wasmd tx gov submit-proposal <proposal-json-file> --from validator --chain-id=te
 ```
 
 ### Tests
-* [params validation unit tests](https://github.com/CosmWasm/wasmd/blob/main/x/wasm/types/params_test.go)
-* [genesis validation tests](https://github.com/CosmWasm/wasmd/blob/main/x/wasm/types/genesis_test.go)
-* [policy integration tests](https://github.com/CosmWasm/wasmd/blob/main/x/wasm/keeper/keeper_test.go)
+* [params validation unit tests](https://github.com/EuclidProtocol/vsld/blob/main/x/wasm/types/params_test.go)
+* [genesis validation tests](https://github.com/EuclidProtocol/vsld/blob/main/x/wasm/types/genesis_test.go)
+* [policy integration tests](https://github.com/EuclidProtocol/vsld/blob/main/x/wasm/keeper/keeper_test.go)
 
 ## CLI
 
 ```shell script
-  wasmd tx wasm submit-proposal [command]
+  vsld tx wasm submit-proposal [command]
 
 Available Commands:
   add-code-upload-params-addresses    Submit an add code upload params addresses proposal to add addresses to code upload config params

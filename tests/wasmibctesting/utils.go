@@ -34,9 +34,9 @@ import (
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 
-	"github.com/CosmWasm/wasmd/app"
-	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
-	"github.com/CosmWasm/wasmd/x/wasm/types"
+	"github.com/EuclidProtocol/vsld/app"
+	wasmkeeper "github.com/EuclidProtocol/vsld/x/wasm/keeper"
+	"github.com/EuclidProtocol/vsld/x/wasm/types"
 )
 
 var (
@@ -89,7 +89,7 @@ func (chain *WasmTestChain) CaptureIBCEventsV2(result *abci.ExecTxResult) {
 // Returns an error if no packet is found.
 func ParsePacketsFromEventsV2(eventType string, events []abci.Event) ([]channeltypesv2.Packet, error) {
 	ferr := func(err error) ([]channeltypesv2.Packet, error) {
-		return nil, fmt.Errorf("wasmd.ParsePacketsFromEventsV2: %w", err)
+		return nil, fmt.Errorf("vsld.ParsePacketsFromEventsV2: %w", err)
 	}
 	var packets []channeltypesv2.Packet
 	for _, ev := range events {
@@ -576,7 +576,7 @@ func CloseChannel(coord *ibctesting.Coordinator, path *ibctesting.Path) {
 // ChainAppFactory abstract factory method that usually implemented by app.SetupWithGenesisValSet
 type ChainAppFactory func(t *testing.T, valSet *cmttypes.ValidatorSet, genAccs []authtypes.GenesisAccount, chainID string, opts []wasmkeeper.Option, balances ...banktypes.Balance) WasmTestApp
 
-// DefaultWasmAppFactory instantiates and sets up the default wasmd app
+// DefaultWasmAppFactory instantiates and sets up the default vsld app
 func DefaultWasmAppFactory(t *testing.T, valSet *cmttypes.ValidatorSet, genAccs []authtypes.GenesisAccount, chainID string, opts []wasmkeeper.Option, balances ...banktypes.Balance) WasmTestApp {
 	return WasmTestApp{app.SetupWithGenesisValSet(t, valSet, genAccs, chainID, opts, balances...)}
 }

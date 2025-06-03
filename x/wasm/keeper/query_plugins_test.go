@@ -31,9 +31,9 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/query"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 
-	"github.com/CosmWasm/wasmd/x/wasm/keeper"
-	"github.com/CosmWasm/wasmd/x/wasm/keeper/wasmtesting"
-	"github.com/CosmWasm/wasmd/x/wasm/types"
+	"github.com/EuclidProtocol/vsld/x/wasm/keeper"
+	"github.com/EuclidProtocol/vsld/x/wasm/keeper/wasmtesting"
+	"github.com/EuclidProtocol/vsld/x/wasm/types"
 )
 
 func TestIBCQuerier(t *testing.T) {
@@ -710,7 +710,7 @@ func (m bankKeeperMock) DenomsMetadata(ctx context.Context, req *banktypes.Query
 	return m.GetDenomsMetadataFn(ctx, req)
 }
 
-func TestConvertSDKDecCoinToWasmDecCoin(t *testing.T) {
+func TestConvertSDKDecCoinTovsldecCoin(t *testing.T) {
 	specs := map[string]struct {
 		src sdk.DecCoins
 		exp []wasmvmtypes.DecCoin
@@ -741,7 +741,7 @@ func TestConvertSDKDecCoinToWasmDecCoin(t *testing.T) {
 	}
 	for name, spec := range specs {
 		t.Run(name, func(t *testing.T) {
-			got := keeper.ConvertSDKDecCoinsToWasmDecCoins(spec.src)
+			got := keeper.ConvertSDKDecCoinsTovsldecCoins(spec.src)
 			assert.Equal(t, spec.exp, got)
 		})
 	}

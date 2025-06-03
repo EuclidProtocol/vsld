@@ -32,8 +32,8 @@ import (
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	vestingexported "github.com/cosmos/cosmos-sdk/x/auth/vesting/exported"
 
-	"github.com/CosmWasm/wasmd/x/wasm/ioutils"
-	"github.com/CosmWasm/wasmd/x/wasm/types"
+	"github.com/EuclidProtocol/vsld/x/wasm/ioutils"
+	"github.com/EuclidProtocol/vsld/x/wasm/types"
 )
 
 // contractMemoryLimit is the memory limit of each contract execution (in MiB)
@@ -77,7 +77,7 @@ type WasmVMResponseHandler interface {
 	) ([]byte, error)
 }
 
-// list of account types that are accepted for wasm contracts. Chains importing wasmd
+// list of account types that are accepted for wasm contracts. Chains importing vsld
 // can overwrite this list with the WithAcceptedAccountTypesOnContractInstantiation option.
 var defaultAcceptedAccountTypes = map[reflect.Type]struct{}{
 	reflect.TypeOf(&authtypes.BaseAccount{}): {},
@@ -313,7 +313,7 @@ func (k Keeper) instantiate(
 			// keep account and balance as it is
 			k.Logger(sdkCtx).Info("instantiate contract with existing account", "address", contractAddress.String())
 		} else {
-			// consider an account in the wasmd namespace spam and overwrite it.
+			// consider an account in the vsld namespace spam and overwrite it.
 			k.Logger(sdkCtx).Info("pruning existing account for contract instantiation", "address", contractAddress.String())
 			contractAccount := k.accountKeeper.NewAccountWithAddress(sdkCtx, contractAddress)
 			k.accountKeeper.SetAccount(sdkCtx, contractAccount)
@@ -382,7 +382,7 @@ func (k Keeper) instantiate(
 	ibc2Port := PortIDForContractV2(contractAddress)
 	contractInfo.IBC2PortID = ibc2Port
 
-	// TODO: Remove AddRoute in https://github.com/CosmWasm/wasmd/issues/2144
+	// TODO: Remove AddRoute in https://github.com/EuclidProtocol/vsld/issues/2144
 	if !k.ibcRouterV2.HasRoute(ibc2Port) {
 		k.ibcRouterV2.AddRoute(ibc2Port, NewIBC2Handler(k))
 	}
