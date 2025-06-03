@@ -1,6 +1,6 @@
 module github.com/EuclidProtocol/vsld
 
-go 1.23.6
+go 1.23.2
 
 require (
 	github.com/CosmWasm/wasmvm/v3 v3.0.0-ibc2.1

@@ -20,8 +20,8 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/x/authz"
 
+	"github.com/EuclidProtocol/vsld/tests/e2e"
 	wasmibctesting "github.com/EuclidProtocol/vsld/tests/wasmibctesting"
-	"github.com/EuclidProtocol/vsld/vsld/tests/e2e"
 	"github.com/EuclidProtocol/vsld/x/wasm/types"
 )
 
