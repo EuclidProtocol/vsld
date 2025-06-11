@@ -23,8 +23,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/gov/client/cli"
 	v1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
 
-	"github.com/CosmWasm/wasmd/x/wasm/ioutils"
-	"github.com/CosmWasm/wasmd/x/wasm/types"
+	"github.com/EuclidProtocol/vsld/x/wasm/ioutils"
+	"github.com/EuclidProtocol/vsld/x/wasm/types"
 )
 
 // DefaultGovAuthority is set to the gov module address.
@@ -319,7 +319,7 @@ func ProposalStoreAndInstantiateContractCmd() *cobra.Command {
 
 			// ensure sensible admin is set (or explicitly immutable)
 			if adminStr == "" && !noAdmin {
-				return errors.New("you must set an admin or explicitly pass --no-admin to make it immutable (wasmd issue #719)")
+				return errors.New("you must set an admin or explicitly pass --no-admin to make it immutable (vsld issue #719)")
 			}
 			if adminStr != "" && noAdmin {
 				return errors.New("you set an admin and passed --no-admin, those cannot both be true")

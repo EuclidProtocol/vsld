@@ -16,9 +16,9 @@ import (
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	"github.com/cosmos/cosmos-sdk/x/group"
 
-	"github.com/CosmWasm/wasmd/tests/e2e"
-	wasmibctesting "github.com/CosmWasm/wasmd/tests/wasmibctesting"
-	"github.com/CosmWasm/wasmd/x/wasm/types"
+	"github.com/EuclidProtocol/vsld/tests/e2e"
+	wasmibctesting "github.com/EuclidProtocol/vsld/tests/wasmibctesting"
+	"github.com/EuclidProtocol/vsld/x/wasm/types"
 )
 
 func TestGroupWithContract(t *testing.T) {

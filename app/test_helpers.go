@@ -42,7 +42,7 @@ import (
 	slashingtypes "github.com/cosmos/cosmos-sdk/x/slashing/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 
-	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
+	wasmkeeper "github.com/EuclidProtocol/vsld/x/wasm/keeper"
 )
 
 // SetupOptions defines arguments that are passed into `WasmApp` constructor.
@@ -185,7 +185,7 @@ func SetupWithGenesisValSet(
 	return app
 }
 
-// SetupWithEmptyStore set up a wasmd app instance with empty DB
+// SetupWithEmptyStore set up a vsld app instance with empty DB
 func SetupWithEmptyStore(t testing.TB) *WasmApp {
 	app, _ := setup(t, "testing", false, 0)
 	return app

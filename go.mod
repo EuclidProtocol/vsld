@@ -1,4 +1,4 @@
-module github.com/CosmWasm/wasmd
+module github.com/EuclidProtocol/vsld
 
 go 1.23.6
 
@@ -233,10 +233,10 @@ replace (
 )
 
 retract (
-	// see https://github.com/CosmWasm/wasmd/issues/1713
+	// see https://github.com/EuclidProtocol/vsld/issues/1713
 	v0.44.0
-	// see https://github.com/CosmWasm/wasmd/issues/1713
+	// see https://github.com/EuclidProtocol/vsld/issues/1713
 	v0.43.0
-	// see https://github.com/CosmWasm/wasmd/issues/1651
+	// see https://github.com/EuclidProtocol/vsld/issues/1651
 	v0.42.0
 )

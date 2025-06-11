@@ -39,7 +39,7 @@ func TestChainUpgrade(t *testing.T) {
 
 	sut.StartChain(t, fmt.Sprintf("--halt-height=%d", upgradeHeight))
 
-	cli := NewWasmdCLI(t, sut, verbose)
+	cli := NewVsldCLI(t, sut, verbose)
 
 	// set some state to ensure that migrations work
 	verifierAddr := cli.AddKey("verifier")
@@ -89,7 +89,7 @@ func TestChainUpgrade(t *testing.T) {
 	t.Log("Upgrade height was reached. Upgrading chain")
 	sut.ExecBinary = currentBranchBinary
 	sut.StartChain(t)
-	cli = NewWasmdCLI(t, sut, verbose)
+	cli = NewVsldCLI(t, sut, verbose)
 
 	// ensure that state matches expectations
 	gotRsp = cli.QuerySmart(contractAddr, `{"verifier":{}}`)
@@ -117,7 +117,7 @@ func FetchExecutable(t *testing.T, version string) string {
 	t.Logf("+++ version not in cache, downloading from github")
 
 	// then download from GH releases: only works with Linux currently as we are not publishing OSX binaries
-	const releaseUrl = "https://github.com/CosmWasm/wasmd/releases/download/%s/wasmd-%s-linux-amd64.tar.gz"
+	const releaseUrl = "https://github.com/EuclidProtocol/vsld/releases/download/%s/vsld-%s-linux-amd64.tar.gz"
 	destDir := t.TempDir()
 	rsp, err := http.Get(fmt.Sprintf(releaseUrl, version, version))
 	require.NoError(t, err)

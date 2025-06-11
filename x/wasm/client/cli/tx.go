@@ -20,8 +20,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/version"
 	"github.com/cosmos/cosmos-sdk/x/authz"
 
-	"github.com/CosmWasm/wasmd/x/wasm/ioutils"
-	"github.com/CosmWasm/wasmd/x/wasm/types"
+	"github.com/EuclidProtocol/vsld/x/wasm/ioutils"
+	"github.com/EuclidProtocol/vsld/x/wasm/types"
 )
 
 const (
@@ -322,7 +322,7 @@ func parseInstantiateArgs(rawCodeID, initMsg string, kr keyring.Keyring, sender 
 
 	// ensure sensible admin is set (or explicitly immutable)
 	if adminStr == "" && !noAdmin {
-		return nil, errors.New("you must set an admin or explicitly pass --no-admin to make it immutable (wasmd issue #719)")
+		return nil, errors.New("you must set an admin or explicitly pass --no-admin to make it immutable (vsld issue #719)")
 	}
 	if adminStr != "" && noAdmin {
 		return nil, errors.New("you set an admin and passed --no-admin, those cannot both be true")

@@ -32,7 +32,7 @@ import (
 	slashingtypes "github.com/cosmos/cosmos-sdk/x/slashing/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 
-	wasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
+	wasmtypes "github.com/EuclidProtocol/vsld/x/wasm/types"
 )
 
 // SimAppChainID hardcoded chainID for simulation

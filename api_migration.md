@@ -1,6 +1,6 @@
 # Changes to the api
 
-## [\#196](https://github.com/CosmWasm/wasmd/issues/196) - Move history of contract code migrations to their own prefix store
+## [\#196](https://github.com/EuclidProtocol/vsld/issues/196) - Move history of contract code migrations to their own prefix store
 
 The `ContractDetails.initMsg` used in cosmJs was moved into a new entity `ContractCodeHistoryEntry`. They contain code updates to a contract.
 
@@ -17,9 +17,9 @@ A list of ContractCodeHistoryEntries with following fields:
 * 404 - for an unknown contract
 
 ### CLI
-`wasmd query wasm contract-history [bech32_address] to print all the code changes.`
+`vsld query wasm contract-history [bech32_address] to print all the code changes.`
 Example:
-`wasmd query wasm contract-history cosmos18r5szma8hm93pvx6lwpjwyxruw27e0k5uw835c` 
+`vsld query wasm contract-history cosmos18r5szma8hm93pvx6lwpjwyxruw27e0k5uw835c` 
 ```json
 [
   {

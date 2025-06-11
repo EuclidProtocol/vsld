@@ -123,7 +123,7 @@ sdk.NewEvent(
 ),
 ```
 
-## Usage in wasmd
+## Usage in vsld
 
 In `x/wasm` we also use Events system. On one hand, the Go implementation of `x/wasm` emits standard events for each 
 message it processes, using the `distribution` module as an example. Furthermore, it allows contracts to
@@ -157,7 +157,7 @@ sdk.NewEvent(
     "store_code",
     sdk.NewAttribute("code_id", fmt.Sprintf("%d", codeID)),
     // features required by the contract (new in 0.18)
-    // see https://github.com/CosmWasm/wasmd/issues/574
+    // see https://github.com/EuclidProtocol/vsld/issues/574
     sdk.NewAttribute("feature", "stargate"),
     sdk.NewAttribute("feature", "staking"),
 )
@@ -294,7 +294,7 @@ undertake, we also perform a number of further validation checks on the contract
 * Attribute keys and values (both in `attributes` and under `events`) are trimmed of leading/trailing whitespace. If they are empty after
   trimming, they are rejected as above (aborting the execution). Otherwise, they are passed verbatim.
 
-## Event Details for wasmd
+## Event Details for vsld
 
 Beyond the basic Event system and emitted events, we must handle more advanced cases in `x/wasm`
 and thus add some more logic to the event processing. Remember that CosmWasm contracts dispatch other

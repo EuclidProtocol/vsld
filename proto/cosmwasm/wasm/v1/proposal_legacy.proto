@@ -7,12 +7,12 @@ import "cosmos/base/v1beta1/coin.proto";
 import "cosmwasm/wasm/v1/types.proto";
 import "amino/amino.proto";
 
-option go_package = "github.com/CosmWasm/wasmd/x/wasm/types";
+option go_package = "github.com/EuclidProtocol/vsld/x/wasm/types";
 option (gogoproto.goproto_stringer_all) = false;
 option (gogoproto.goproto_getters_all) = false;
 option (gogoproto.equal_all) = true;
 
-// Deprecated: Do not use. Since wasmd v0.40, there is no longer a need for
+// Deprecated: Do not use. Since vsld v0.40, there is no longer a need for
 // an explicit StoreCodeProposal. To submit WASM code to the system,
 // a simple MsgStoreCode can be invoked from the x/gov module via
 // a v1 governance proposal.
@@ -45,7 +45,7 @@ message StoreCodeProposal {
   bytes code_hash = 11;
 }
 
-// Deprecated: Do not use. Since wasmd v0.40, there is no longer a need for
+// Deprecated: Do not use. Since vsld v0.40, there is no longer a need for
 // an explicit InstantiateContractProposal. To instantiate a contract,
 // a simple MsgInstantiateContract can be invoked from the x/gov module via
 // a v1 governance proposal.
@@ -80,7 +80,7 @@ message InstantiateContractProposal {
   ];
 }
 
-// Deprecated: Do not use. Since wasmd v0.40, there is no longer a need for
+// Deprecated: Do not use. Since vsld v0.40, there is no longer a need for
 // an explicit InstantiateContract2Proposal. To instantiate contract 2,
 // a simple MsgInstantiateContract2 can be invoked from the x/gov module via
 // a v1 governance proposal.
@@ -120,7 +120,7 @@ message InstantiateContract2Proposal {
   bool fix_msg = 10;
 }
 
-// Deprecated: Do not use. Since wasmd v0.40, there is no longer a need for
+// Deprecated: Do not use. Since vsld v0.40, there is no longer a need for
 // an explicit MigrateContractProposal. To migrate a contract,
 // a simple MsgMigrateContract can be invoked from the x/gov module via
 // a v1 governance proposal.
@@ -146,7 +146,7 @@ message MigrateContractProposal {
   ];
 }
 
-// Deprecated: Do not use. Since wasmd v0.40, there is no longer a need for
+// Deprecated: Do not use. Since vsld v0.40, there is no longer a need for
 // an explicit SudoContractProposal. To call sudo on a contract,
 // a simple MsgSudoContract can be invoked from the x/gov module via
 // a v1 governance proposal.
@@ -168,7 +168,7 @@ message SudoContractProposal {
   ];
 }
 
-// Deprecated: Do not use. Since wasmd v0.40, there is no longer a need for
+// Deprecated: Do not use. Since vsld v0.40, there is no longer a need for
 // an explicit ExecuteContractProposal. To call execute on a contract,
 // a simple MsgExecuteContract can be invoked from the x/gov module via
 // a v1 governance proposal.
@@ -199,7 +199,7 @@ message ExecuteContractProposal {
   ];
 }
 
-// Deprecated: Do not use. Since wasmd v0.40, there is no longer a need for
+// Deprecated: Do not use. Since vsld v0.40, there is no longer a need for
 // an explicit UpdateAdminProposal. To set an admin for a contract,
 // a simple MsgUpdateAdmin can be invoked from the x/gov module via
 // a v1 governance proposal.
@@ -221,7 +221,7 @@ message UpdateAdminProposal {
   string contract = 4 [ (cosmos_proto.scalar) = "cosmos.AddressString" ];
 }
 
-// Deprecated: Do not use. Since wasmd v0.40, there is no longer a need for
+// Deprecated: Do not use. Since vsld v0.40, there is no longer a need for
 // an explicit ClearAdminProposal. To clear the admin of a contract,
 // a simple MsgClearAdmin can be invoked from the x/gov module via
 // a v1 governance proposal.
@@ -238,7 +238,7 @@ message ClearAdminProposal {
   string contract = 3 [ (cosmos_proto.scalar) = "cosmos.AddressString" ];
 }
 
-// Deprecated: Do not use. Since wasmd v0.40, there is no longer a need for
+// Deprecated: Do not use. Since vsld v0.40, there is no longer a need for
 // an explicit PinCodesProposal. To pin a set of code ids in the wasmvm
 // cache, a simple MsgPinCodes can be invoked from the x/gov module via
 // a v1 governance proposal.
@@ -258,7 +258,7 @@ message PinCodesProposal {
   ];
 }
 
-// Deprecated: Do not use. Since wasmd v0.40, there is no longer a need for
+// Deprecated: Do not use. Since vsld v0.40, there is no longer a need for
 // an explicit UnpinCodesProposal. To unpin a set of code ids in the wasmvm
 // cache, a simple MsgUnpinCodes can be invoked from the x/gov module via
 // a v1 governance proposal.
@@ -288,7 +288,7 @@ message AccessConfigUpdate {
       [ (gogoproto.nullable) = false, (amino.dont_omitempty) = true ];
 }
 
-// Deprecated: Do not use. Since wasmd v0.40, there is no longer a need for
+// Deprecated: Do not use. Since vsld v0.40, there is no longer a need for
 // an explicit UpdateInstantiateConfigProposal. To update instantiate config
 // to a set of code ids, a simple MsgUpdateInstantiateConfig can be invoked from
 // the x/gov module via a v1 governance proposal.
@@ -307,7 +307,7 @@ message UpdateInstantiateConfigProposal {
       [ (gogoproto.nullable) = false, (amino.dont_omitempty) = true ];
 }
 
-// Deprecated: Do not use. Since wasmd v0.40, there is no longer a need for
+// Deprecated: Do not use. Since vsld v0.40, there is no longer a need for
 // an explicit StoreAndInstantiateContractProposal. To store and instantiate
 // the contract, a simple MsgStoreAndInstantiateContract can be invoked from
 // the x/gov module via a v1 governance proposal.

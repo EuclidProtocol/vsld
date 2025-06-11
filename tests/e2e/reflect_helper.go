@@ -13,9 +13,9 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	wasmibctesting "github.com/CosmWasm/wasmd/tests/wasmibctesting"
-	"github.com/CosmWasm/wasmd/x/wasm/keeper/testdata"
-	"github.com/CosmWasm/wasmd/x/wasm/types"
+	wasmibctesting "github.com/EuclidProtocol/vsld/tests/wasmibctesting"
+	"github.com/EuclidProtocol/vsld/x/wasm/keeper/testdata"
+	"github.com/EuclidProtocol/vsld/x/wasm/types"
 )
 
 // InstantiateStargateReflectContract stores and instantiates the reflect contract shipped with CosmWasm 1.5.3.

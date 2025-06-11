@@ -17,7 +17,7 @@ func TestRecursiveMsgsExternalTrigger(t *testing.T) {
 	const maxBlockGas = 2_000_000
 	sut.ModifyGenesisJSON(t, SetConsensusMaxGas(t, maxBlockGas))
 	sut.StartChain(t)
-	cli := NewWasmdCLI(t, sut, verbose)
+	cli := NewVsldCLI(t, sut, verbose)
 
 	codeID := cli.WasmStore("./testdata/hackatom.wasm.gzip", "--from=node0", "--gas=1500000", "--fees=2stake")
 	initMsg := fmt.Sprintf(`{"verifier":%q, "beneficiary":%q}`, randomBech32Addr(), randomBech32Addr())
@@ -34,7 +34,7 @@ func TestRecursiveMsgsExternalTrigger(t *testing.T) {
 	}
 	for name, spec := range specs {
 		t.Run(name, func(t *testing.T) {
-			cli := NewWasmdCLI(t, sut, verbose)
+			cli := NewVsldCLI(t, sut, verbose)
 			execMsg := `{"message_loop":{}}`
 			fees := "1stake"
 			gas := spec.gas
@@ -56,7 +56,7 @@ func TestRecursiveMsgsExternalTrigger(t *testing.T) {
 func TestRecursiveSmartQuery(t *testing.T) {
 	sut.ResetDirtyChain(t)
 	sut.StartChain(t)
-	cli := NewWasmdCLI(t, sut, verbose)
+	cli := NewVsldCLI(t, sut, verbose)
 
 	initMsg := fmt.Sprintf(`{"verifier":%q, "beneficiary":%q}`, randomBech32Addr(), randomBech32Addr())
 	maliciousContractAddr := cli.WasmInstantiate(cli.WasmStore("./testdata/hackatom.wasm.gzip", "--from=node0", "--gas=1500000", "--fees=2stake"), initMsg)

@@ -20,9 +20,9 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/x/authz"
 
-	"github.com/CosmWasm/wasmd/tests/e2e"
-	wasmibctesting "github.com/CosmWasm/wasmd/tests/wasmibctesting"
-	"github.com/CosmWasm/wasmd/x/wasm/types"
+	"github.com/EuclidProtocol/vsld/tests/e2e"
+	wasmibctesting "github.com/EuclidProtocol/vsld/tests/wasmibctesting"
+	"github.com/EuclidProtocol/vsld/x/wasm/types"
 )
 
 func TestGrants(t *testing.T) {

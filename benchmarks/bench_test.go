@@ -22,7 +22,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/authz"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 
-	wasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
+	wasmtypes "github.com/EuclidProtocol/vsld/x/wasm/types"
 )
 
 func BenchmarkTxSending(b *testing.B) {
