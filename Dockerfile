@@ -21,7 +21,7 @@ RUN sha256sum /lib/libwasmvm_muslc.aarch64.a | grep 1526d57615e384e604d9d0bfd68e
 RUN sha256sum /lib/libwasmvm_muslc.x86_64.a | grep 360e0670a2e69d4b422e0e12c07c5044d6125ffe46e011dfd9b70f89a40f092a
 
 # force it to use static lib (from above) not standard libgo_cosmwasm.so file
-RUN LEDGER_ENABLED=false BUILD_TAGS=muslc LINK_STATICALLY=true make build
+RUN LEDGER_ENABLED=false BUILD_TAGS=muslc,pebbledb LINK_STATICALLY=true make build
 RUN echo "Ensuring binary is statically linked ..." \
   && (file /code/build/wasmd | grep "statically linked")
 
