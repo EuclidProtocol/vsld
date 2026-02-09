@@ -22,7 +22,7 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/types/query"
 
-	"github.com/EuclidProtocol/vsld/x/wasm/types"
+	"github.com/CosmWasm/wasmd/x/wasm/types"
 )
 
 // DefaultGasCostBuildAddress is the SDK gas cost to build a contract address
@@ -200,11 +200,7 @@ func (q GrpcQuerier) SmartContractState(c context.Context, req *types.QuerySmart
 	if err != nil {
 		return nil, err
 	}
-
-	// limit the gas to the queryGasLimit or the remaining gas, whichever is smaller
-	ctx := sdk.UnwrapSDKContext(c)
-	gasLimit := min(ctx.GasMeter().GasRemaining(), q.queryGasLimit)
-	ctx = ctx.WithGasMeter(storetypes.NewGasMeter(gasLimit))
+	ctx := sdk.UnwrapSDKContext(c).WithGasMeter(storetypes.NewGasMeter(q.queryGasLimit))
 	// recover from out-of-gas panic
 	defer func() {
 		if r := recover(); r != nil {
@@ -456,12 +452,6 @@ func (q GrpcQuerier) WasmLimitsConfig(c context.Context, req *types.QueryWasmLim
 }
 
 func (q GrpcQuerier) BuildAddress(c context.Context, req *types.QueryBuildAddressRequest) (*types.QueryBuildAddressResponse, error) {
-	ctx := sdk.UnwrapSDKContext(c)
-	defer ctx.GasMeter().ConsumeGas(DefaultGasCostBuildAddress, "build address")
-	return BuildAddressPredictable(req)
-}
-
-func BuildAddressPredictable(req *types.QueryBuildAddressRequest) (*types.QueryBuildAddressResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "empty request")
 	}
@@ -480,6 +470,9 @@ func BuildAddressPredictable(req *types.QueryBuildAddressRequest) (*types.QueryB
 	if len(salt) == 0 {
 		return nil, status.Error(codes.InvalidArgument, "empty salt")
 	}
+
+	ctx := sdk.UnwrapSDKContext(c)
+	defer ctx.GasMeter().ConsumeGas(DefaultGasCostBuildAddress, "build address")
 
 	if req.InitArgs == nil {
 		return &types.QueryBuildAddressResponse{

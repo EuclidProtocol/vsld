@@ -10,7 +10,7 @@ import (
 	"os"
 	"strconv"
 
-	wasmvm "github.com/CosmWasm/wasmvm/v3"
+	wasmvm "github.com/CosmWasm/wasmvm/v2"
 	"github.com/spf13/cobra"
 	flag "github.com/spf13/pflag"
 
@@ -18,8 +18,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/EuclidProtocol/vsld/x/wasm/keeper"
-	"github.com/EuclidProtocol/vsld/x/wasm/types"
+	"github.com/CosmWasm/wasmd/x/wasm/types"
 )
 
 func GetQueryCmd() *cobra.Command {
@@ -78,12 +77,19 @@ func GetCmdBuildAddress() *cobra.Command {
 		Aliases: []string{"address"},
 		Args:    cobra.RangeArgs(3, 4),
 		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, err := client.GetClientQueryContext(cmd)
+			if err != nil {
+				return err
+			}
+
 			var initArgs []byte
 			if len(args) == 4 {
 				initArgs = types.RawContractMessage(args[3])
 			}
 
-			res, err := keeper.BuildAddressPredictable(
+			queryClient := types.NewQueryClient(clientCtx)
+			res, err := queryClient.BuildAddress(
+				context.Background(),
 				&types.QueryBuildAddressRequest{
 					CodeHash:       args[0],
 					CreatorAddress: args[1],
@@ -94,8 +100,7 @@ func GetCmdBuildAddress() *cobra.Command {
 			if err != nil {
 				return err
 			}
-			fmt.Println(res.Address)
-			return nil
+			return clientCtx.PrintProto(res)
 		},
 		SilenceUsage: true,
 	}
@@ -216,7 +221,7 @@ func GetCmdQueryCode() *cobra.Command {
 				return err
 			}
 			if len(res.Data) == 0 {
-				return errors.New("contract not found")
+				return fmt.Errorf("contract not found")
 			}
 
 			fmt.Printf("Downloading wasm code to %s\n", args[1])

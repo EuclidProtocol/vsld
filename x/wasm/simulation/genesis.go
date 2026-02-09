@@ -3,7 +3,7 @@ package simulation
 import (
 	"github.com/cosmos/cosmos-sdk/types/module"
 
-	"github.com/EuclidProtocol/vsld/x/wasm/types"
+	"github.com/CosmWasm/wasmd/x/wasm/types"
 )
 
 // RandomizedGenState generates a random GenesisState for wasm

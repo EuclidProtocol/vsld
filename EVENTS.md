@@ -123,7 +123,7 @@ sdk.NewEvent(
 ),
 ```
 
-## Usage in vsld
+## Usage in wasmd
 
 In `x/wasm` we also use Events system. On one hand, the Go implementation of `x/wasm` emits standard events for each 
 message it processes, using the `distribution` module as an example. Furthermore, it allows contracts to
@@ -157,7 +157,7 @@ sdk.NewEvent(
     "store_code",
     sdk.NewAttribute("code_id", fmt.Sprintf("%d", codeID)),
     // features required by the contract (new in 0.18)
-    // see https://github.com/CosmWasm/vsld/issues/574
+    // see https://github.com/CosmWasm/wasmd/issues/574
     sdk.NewAttribute("feature", "stargate"),
     sdk.NewAttribute("feature", "staking"),
 )
@@ -240,7 +240,7 @@ If the response contains a non-empty list of `attributes`, `x/wasm` will emit a 
 always be tagged with `_contract_address` by the Go module, so this is trust-worthy. The contract itself cannot overwrite
 this field. Beyond this, the `attributes` returned by the contract, these are appended to the same event.
 
-A contract may also return custom `events`. These are multiple events, each with their own type as well as attributes.
+A contact may also return custom `events`. These are multiple events, each with their own type as well as attributes.
 When they are received, `x/wasm` prepends `wasm-` to the event type returned by the contact to avoid them trying to fake
 an eg. `transfer` event from the bank module. The output here may look like:
 
@@ -294,7 +294,7 @@ undertake, we also perform a number of further validation checks on the contract
 * Attribute keys and values (both in `attributes` and under `events`) are trimmed of leading/trailing whitespace. If they are empty after
   trimming, they are rejected as above (aborting the execution). Otherwise, they are passed verbatim.
 
-## Event Details for vsld
+## Event Details for wasmd
 
 Beyond the basic Event system and emitted events, we must handle more advanced cases in `x/wasm`
 and thus add some more logic to the event processing. Remember that CosmWasm contracts dispatch other
@@ -312,7 +312,7 @@ consistent way possible.
 ### Combining Events from Sub-Messages
 
 Each time a contract is executed, it not only returns the `message` event from its call, the `execute` event for the
-contract and the `wasm` event with any custom fields from the contract itself. It will also return the same set of information
+contact and the `wasm` event with any custom fields from the contract itself. It will also return the same set of information
 for all messages that it returned, which were later dispatched. The event system was really designed for one main
 action emitting events, so we define a structure to flatten this event tree:
 
@@ -346,7 +346,7 @@ sdk.NewEvent(
     sdk.NewAttribute("custom", "from contract"),
 ),
 
-// instantiating contract (first dispatched message)
+// instantiating contract (first dipatched message)
 sdk.NewEvent(
     "instantiate",
     sdk.NewAttribute("code_id", fmt.Sprintf("%d", msg.CodeID)),
@@ -382,7 +382,7 @@ sdk.NewEvent(
 
 When the `reply` clause in a contract is called, it will receive the data returned from the message it
 applies to, as well as all events from that message. In the above case, when the `reply` function was called
-on `contractAddr` in response to initializing a contract, it would get the binary-encoded `initData` in the `data`
+on `contractAddr` in response to initializing a contact, it would get the binary-encoded `initData` in the `data`
 field, and the following in the `events` field:
 
 ```go

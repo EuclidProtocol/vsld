@@ -14,12 +14,12 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/msgservice"
 
-	wasmkeeper "github.com/EuclidProtocol/vsld/x/wasm/keeper"
+	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
 )
 
 var emptyWasmOpts []wasmkeeper.Option
 
-func TestvsldExport(t *testing.T) {
+func TestWasmdExport(t *testing.T) {
 	db := dbm.NewMemDB()
 	logger := log.NewTestLogger(t)
 	gapp := NewWasmAppWithCustomOptions(t, false, SetupOptions{

@@ -6,7 +6,7 @@ import (
 	"reflect"
 	"testing"
 
-	wasmvmtypes "github.com/CosmWasm/wasmvm/v3/types"
+	wasmvmtypes "github.com/CosmWasm/wasmvm/v2/types"
 	abci "github.com/cometbft/cometbft/abci/types"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -17,7 +17,7 @@ import (
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/EuclidProtocol/vsld/x/wasm/keeper/wasmtesting"
+	"github.com/CosmWasm/wasmd/x/wasm/keeper/wasmtesting"
 )
 
 func TestDispatchSubmessages(t *testing.T) {
@@ -333,7 +333,7 @@ func TestDispatchSubmessages(t *testing.T) {
 				DispatchMsgFn: func(ctx sdk.Context, contractAddr sdk.AccAddress, contractIBCPortID string, msg wasmvmtypes.CosmosMsg) (events []sdk.Event, data [][]byte, msgResponses [][]*codectypes.Any, err error) {
 					events = []sdk.Event{
 						sdk.NewEvent("message", sdk.NewAttribute("_contract_address", contractAddr.String())),
-						// we don't know what the contractAddr will be so we can't use it in the final tests
+						// we don't know what the contarctAddr will be so we can't use it in the final tests
 						sdk.NewEvent("execute", sdk.NewAttribute("_contract_address", "placeholder-random-addr")),
 						sdk.NewEvent("wasm", sdk.NewAttribute("random", "data")),
 					}

@@ -1,4 +1,4 @@
 #!/bin/sh
 
-./setup_vsld.sh "$@"
-./run_vsld.sh
+./setup_wasmd.sh "$@"
+./run_wasmd.sh

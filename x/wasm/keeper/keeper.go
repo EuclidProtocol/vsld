@@ -12,10 +12,9 @@ import (
 	"strings"
 	"time"
 
-	wasmvm "github.com/CosmWasm/wasmvm/v3"
-	wasmvmtypes "github.com/CosmWasm/wasmvm/v3/types"
-	channeltypes "github.com/cosmos/ibc-go/v10/modules/core/04-channel/types"
-	ibcapi "github.com/cosmos/ibc-go/v10/modules/core/api"
+	wasmvm "github.com/CosmWasm/wasmvm/v2"
+	wasmvmtypes "github.com/CosmWasm/wasmvm/v2/types"
+	channeltypes "github.com/cosmos/ibc-go/v8/modules/core/04-channel/types"
 
 	"cosmossdk.io/collections"
 	corestoretypes "cosmossdk.io/core/store"
@@ -32,8 +31,8 @@ import (
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	vestingexported "github.com/cosmos/cosmos-sdk/x/auth/vesting/exported"
 
-	"github.com/EuclidProtocol/vsld/x/wasm/ioutils"
-	"github.com/EuclidProtocol/vsld/x/wasm/types"
+	"github.com/CosmWasm/wasmd/x/wasm/ioutils"
+	"github.com/CosmWasm/wasmd/x/wasm/types"
 )
 
 // contractMemoryLimit is the memory limit of each contract execution (in MiB)
@@ -77,7 +76,7 @@ type WasmVMResponseHandler interface {
 	) ([]byte, error)
 }
 
-// list of account types that are accepted for wasm contracts. Chains importing vsld
+// list of account types that are accepted for wasm contracts. Chains importing wasmd
 // can overwrite this list with the WithAcceptedAccountTypesOnContractInstantiation option.
 var defaultAcceptedAccountTypes = map[reflect.Type]struct{}{
 	reflect.TypeOf(&authtypes.BaseAccount{}): {},
@@ -90,6 +89,8 @@ type Keeper struct {
 	cdc                   codec.Codec
 	accountKeeper         types.AccountKeeper
 	bank                  CoinTransferrer
+	portKeeper            types.PortKeeper
+	capabilityKeeper      types.CapabilityKeeper
 	wasmVM                types.WasmEngine
 	wasmVMQueryHandler    WasmVMQueryHandler
 	wasmVMResponseHandler WasmVMResponseHandler
@@ -111,12 +112,6 @@ type Keeper struct {
 
 	// wasmLimits contains the limits sent to wasmvm on init
 	wasmLimits wasmvmtypes.WasmLimits
-
-	ibcRouterV2 *ibcapi.Router
-}
-
-func (k Keeper) GetIBCRouterV2() *ibcapi.Router {
-	return k.ibcRouterV2
 }
 
 func (k Keeper) getUploadAccessConfig(ctx context.Context) types.AccessConfig {
@@ -313,7 +308,7 @@ func (k Keeper) instantiate(
 			// keep account and balance as it is
 			k.Logger(sdkCtx).Info("instantiate contract with existing account", "address", contractAddress.String())
 		} else {
-			// consider an account in the vsld namespace spam and overwrite it.
+			// consider an account in the wasmd namespace spam and overwrite it.
 			k.Logger(sdkCtx).Info("pruning existing account for contract instantiation", "address", contractAddress.String())
 			contractAccount := k.accountKeeper.NewAccountWithAddress(sdkCtx, contractAddress)
 			k.accountKeeper.SetAccount(sdkCtx, contractAccount)
@@ -375,16 +370,11 @@ func (k Keeper) instantiate(
 	}
 	if report.HasIBCEntryPoints {
 		// register IBC port
-		ibcPort := PortIDForContract(contractAddress)
+		ibcPort, err := k.ensureIbcPort(sdkCtx, contractAddress)
+		if err != nil {
+			return nil, nil, err
+		}
 		contractInfo.IBCPortID = ibcPort
-	}
-
-	ibc2Port := PortIDForContractV2(contractAddress)
-	contractInfo.IBC2PortID = ibc2Port
-
-	// TODO: Remove AddRoute in https://github.com/EuclidProtocol/vsld/issues/2144
-	if !k.ibcRouterV2.HasRoute(ibc2Port) {
-		k.ibcRouterV2.AddRoute(ibc2Port, NewIBC2Handler(k))
 	}
 
 	// store contract before dispatch so that contract could be called back
@@ -511,12 +501,12 @@ func (k Keeper) migrate(
 		return nil, errorsmod.Wrap(types.ErrMigrationFailed, "requires ibc callbacks")
 	case report.HasIBCEntryPoints && contractInfo.IBCPortID == "":
 		// add ibc port
-		ibcPort := PortIDForContract(contractAddress)
+		ibcPort, err := k.ensureIbcPort(sdkCtx, contractAddress)
+		if err != nil {
+			return nil, err
+		}
 		contractInfo.IBCPortID = ibcPort
 	}
-
-	ibc2Port := PortIDForContractV2(contractAddress)
-	contractInfo.IBC2PortID = ibc2Port
 
 	var response *wasmvmtypes.Response
 
@@ -1210,6 +1200,7 @@ func (k Keeper) checkDiscountEligibility(ctx sdk.Context, checksum []byte, isPin
 
 	txContracts, ok := types.TxContractsFromContext(ctx)
 	if !ok || txContracts.GetContracts() == nil {
+		k.Logger(ctx).Warn("cannot get tx contracts from context")
 		return ctx, false
 	} else if txContracts.Exists(checksum) {
 		return ctx, true
@@ -1304,6 +1295,11 @@ func (k *Keeper) handleContractResponse(
 			return nil, err
 		}
 		ctx.EventManager().EmitEvents(customEvents)
+	}
+	// keep track of call depth
+	ctx, err := checkAndIncreaseCallDepth(ctx, k.maxCallDepth)
+	if err != nil {
+		return nil, err
 	}
 	return k.wasmVMResponseHandler.Handle(ctx, contractAddr, ibcPort, msgs, data)
 }

@@ -236,7 +236,6 @@ ContractInfo stores a WASM contract instance
 | `label` | [string](#string) |  | Label is optional metadata to be stored with a contract instance. |
 | `created` | [AbsoluteTxPosition](#cosmwasm.wasm.v1.AbsoluteTxPosition) |  | Created Tx position when the contract was instantiated. |
 | `ibc_port_id` | [string](#string) |  |  |
-| `ibc2_port_id` | [string](#string) |  |  |
 | `extension` | [google.protobuf.Any](#google.protobuf.Any) |  | Extension is an extension point to store custom metadata within the persistence model. |
 
 
@@ -325,7 +324,7 @@ ContractCodeHistoryOperationType actions that caused a code change
 ### AcceptedMessageKeysFilter
 AcceptedMessageKeysFilter accept only the specific contract message keys in
 the json object to be executed.
-Since: vsld 0.30
+Since: wasmd 0.30
 
 
 | Field | Type | Label | Description |
@@ -342,7 +341,7 @@ Since: vsld 0.30
 ### AcceptedMessagesFilter
 AcceptedMessagesFilter accept only the specific raw contract messages to be
 executed.
-Since: vsld 0.30
+Since: wasmd 0.30
 
 
 | Field | Type | Label | Description |
@@ -359,7 +358,7 @@ Since: vsld 0.30
 ### AllowAllMessagesFilter
 AllowAllMessagesFilter is a wildcard to allow any type of contract payload
 message.
-Since: vsld 0.30
+Since: wasmd 0.30
 
 
 
@@ -387,7 +386,7 @@ CodeGrant a granted permission for a single code
 ### CombinedLimit
 CombinedLimit defines the maximal amounts that can be sent to a contract and
 the maximal number of calls executable. Both need to remain >0 to be valid.
-Since: vsld 0.30
+Since: wasmd 0.30
 
 
 | Field | Type | Label | Description |
@@ -404,7 +403,7 @@ Since: vsld 0.30
 
 ### ContractExecutionAuthorization
 ContractExecutionAuthorization defines authorization for wasm execute.
-Since: vsld 0.30
+Since: wasmd 0.30
 
 
 | Field | Type | Label | Description |
@@ -420,7 +419,7 @@ Since: vsld 0.30
 
 ### ContractGrant
 ContractGrant a granted permission for a single contract
-Since: vsld 0.30
+Since: wasmd 0.30
 
 
 | Field | Type | Label | Description |
@@ -438,7 +437,7 @@ Since: vsld 0.30
 
 ### ContractMigrationAuthorization
 ContractMigrationAuthorization defines authorization for wasm contract
-migration. Since: vsld 0.30
+migration. Since: wasmd 0.30
 
 
 | Field | Type | Label | Description |
@@ -454,7 +453,7 @@ migration. Since: vsld 0.30
 
 ### MaxCallsLimit
 MaxCallsLimit limited number of calls to the contract. No funds transferable.
-Since: vsld 0.30
+Since: wasmd 0.30
 
 
 | Field | Type | Label | Description |
@@ -470,7 +469,7 @@ Since: vsld 0.30
 
 ### MaxFundsLimit
 MaxFundsLimit defines the maximal amounts that can be sent to the contract.
-Since: vsld 0.30
+Since: wasmd 0.30
 
 
 | Field | Type | Label | Description |
@@ -486,7 +485,7 @@ Since: vsld 0.30
 
 ### StoreCodeAuthorization
 StoreCodeAuthorization defines authorization for wasm code upload.
-Since: vsld 0.42
+Since: wasmd 0.42
 
 
 | Field | Type | Label | Description |
@@ -694,7 +693,7 @@ applied.
 <a name="cosmwasm.wasm.v1.ClearAdminProposal"></a>
 
 ### ClearAdminProposal
-Deprecated: Do not use. Since vsld v0.40, there is no longer a need for
+Deprecated: Do not use. Since wasmd v0.40, there is no longer a need for
 an explicit ClearAdminProposal. To clear the admin of a contract,
 a simple MsgClearAdmin can be invoked from the x/gov module via
 a v1 governance proposal.
@@ -714,7 +713,7 @@ a v1 governance proposal.
 <a name="cosmwasm.wasm.v1.ExecuteContractProposal"></a>
 
 ### ExecuteContractProposal
-Deprecated: Do not use. Since vsld v0.40, there is no longer a need for
+Deprecated: Do not use. Since wasmd v0.40, there is no longer a need for
 an explicit ExecuteContractProposal. To call execute on a contract,
 a simple MsgExecuteContract can be invoked from the x/gov module via
 a v1 governance proposal.
@@ -737,7 +736,7 @@ a v1 governance proposal.
 <a name="cosmwasm.wasm.v1.InstantiateContract2Proposal"></a>
 
 ### InstantiateContract2Proposal
-Deprecated: Do not use. Since vsld v0.40, there is no longer a need for
+Deprecated: Do not use. Since wasmd v0.40, there is no longer a need for
 an explicit InstantiateContract2Proposal. To instantiate contract 2,
 a simple MsgInstantiateContract2 can be invoked from the x/gov module via
 a v1 governance proposal.
@@ -764,7 +763,7 @@ a v1 governance proposal.
 <a name="cosmwasm.wasm.v1.InstantiateContractProposal"></a>
 
 ### InstantiateContractProposal
-Deprecated: Do not use. Since vsld v0.40, there is no longer a need for
+Deprecated: Do not use. Since wasmd v0.40, there is no longer a need for
 an explicit InstantiateContractProposal. To instantiate a contract,
 a simple MsgInstantiateContract can be invoked from the x/gov module via
 a v1 governance proposal.
@@ -789,7 +788,7 @@ a v1 governance proposal.
 <a name="cosmwasm.wasm.v1.MigrateContractProposal"></a>
 
 ### MigrateContractProposal
-Deprecated: Do not use. Since vsld v0.40, there is no longer a need for
+Deprecated: Do not use. Since wasmd v0.40, there is no longer a need for
 an explicit MigrateContractProposal. To migrate a contract,
 a simple MsgMigrateContract can be invoked from the x/gov module via
 a v1 governance proposal.
@@ -813,7 +812,7 @@ Note: skipping 3 as this was previously used for unneeded run_as |
 <a name="cosmwasm.wasm.v1.PinCodesProposal"></a>
 
 ### PinCodesProposal
-Deprecated: Do not use. Since vsld v0.40, there is no longer a need for
+Deprecated: Do not use. Since wasmd v0.40, there is no longer a need for
 an explicit PinCodesProposal. To pin a set of code ids in the wasmvm
 cache, a simple MsgPinCodes can be invoked from the x/gov module via
 a v1 governance proposal.
@@ -833,7 +832,7 @@ a v1 governance proposal.
 <a name="cosmwasm.wasm.v1.StoreAndInstantiateContractProposal"></a>
 
 ### StoreAndInstantiateContractProposal
-Deprecated: Do not use. Since vsld v0.40, there is no longer a need for
+Deprecated: Do not use. Since wasmd v0.40, there is no longer a need for
 an explicit StoreAndInstantiateContractProposal. To store and instantiate
 the contract, a simple MsgStoreAndInstantiateContract can be invoked from
 the x/gov module via a v1 governance proposal.
@@ -863,7 +862,7 @@ the x/gov module via a v1 governance proposal.
 <a name="cosmwasm.wasm.v1.StoreCodeProposal"></a>
 
 ### StoreCodeProposal
-Deprecated: Do not use. Since vsld v0.40, there is no longer a need for
+Deprecated: Do not use. Since wasmd v0.40, there is no longer a need for
 an explicit StoreCodeProposal. To submit WASM code to the system,
 a simple MsgStoreCode can be invoked from the x/gov module via
 a v1 governance proposal.
@@ -889,7 +888,7 @@ a v1 governance proposal.
 <a name="cosmwasm.wasm.v1.SudoContractProposal"></a>
 
 ### SudoContractProposal
-Deprecated: Do not use. Since vsld v0.40, there is no longer a need for
+Deprecated: Do not use. Since wasmd v0.40, there is no longer a need for
 an explicit SudoContractProposal. To call sudo on a contract,
 a simple MsgSudoContract can be invoked from the x/gov module via
 a v1 governance proposal.
@@ -910,7 +909,7 @@ a v1 governance proposal.
 <a name="cosmwasm.wasm.v1.UnpinCodesProposal"></a>
 
 ### UnpinCodesProposal
-Deprecated: Do not use. Since vsld v0.40, there is no longer a need for
+Deprecated: Do not use. Since wasmd v0.40, there is no longer a need for
 an explicit UnpinCodesProposal. To unpin a set of code ids in the wasmvm
 cache, a simple MsgUnpinCodes can be invoked from the x/gov module via
 a v1 governance proposal.
@@ -930,7 +929,7 @@ a v1 governance proposal.
 <a name="cosmwasm.wasm.v1.UpdateAdminProposal"></a>
 
 ### UpdateAdminProposal
-Deprecated: Do not use. Since vsld v0.40, there is no longer a need for
+Deprecated: Do not use. Since wasmd v0.40, there is no longer a need for
 an explicit UpdateAdminProposal. To set an admin for a contract,
 a simple MsgUpdateAdmin can be invoked from the x/gov module via
 a v1 governance proposal.
@@ -951,7 +950,7 @@ a v1 governance proposal.
 <a name="cosmwasm.wasm.v1.UpdateInstantiateConfigProposal"></a>
 
 ### UpdateInstantiateConfigProposal
-Deprecated: Do not use. Since vsld v0.40, there is no longer a need for
+Deprecated: Do not use. Since wasmd v0.40, there is no longer a need for
 an explicit UpdateInstantiateConfigProposal. To update instantiate config
 to a set of code ids, a simple MsgUpdateInstantiateConfig can be invoked from
 the x/gov module via a v1 governance proposal.
@@ -961,7 +960,7 @@ the x/gov module via a v1 governance proposal.
 | ----- | ---- | ----- | ----------- |
 | `title` | [string](#string) |  | Title is a short summary |
 | `description` | [string](#string) |  | Description is a human readable text |
-| `access_config_updates` | [AccessConfigUpdate](#cosmwasm.wasm.v1.AccessConfigUpdate) | repeated | AccessConfigUpdates contains the list of code ids and the access config to be applied. |
+| `access_config_updates` | [AccessConfigUpdate](#cosmwasm.wasm.v1.AccessConfigUpdate) | repeated | AccessConfigUpdate contains the list of code ids and the access config to be applied. |
 
 
 

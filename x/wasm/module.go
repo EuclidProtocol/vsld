@@ -3,12 +3,11 @@ package wasm
 import (
 	"context"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"runtime/debug"
 	"strings"
 
-	wasmvm "github.com/CosmWasm/wasmvm/v3"
+	wasmvm "github.com/CosmWasm/wasmvm/v2"
 	abci "github.com/cometbft/cometbft/abci/types"
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/spf13/cast"
@@ -26,11 +25,11 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/module"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 
-	"github.com/EuclidProtocol/vsld/x/wasm/client/cli"
-	"github.com/EuclidProtocol/vsld/x/wasm/exported"
-	"github.com/EuclidProtocol/vsld/x/wasm/keeper"
-	"github.com/EuclidProtocol/vsld/x/wasm/simulation"
-	"github.com/EuclidProtocol/vsld/x/wasm/types"
+	"github.com/CosmWasm/wasmd/x/wasm/client/cli"
+	"github.com/CosmWasm/wasmd/x/wasm/exported"
+	"github.com/CosmWasm/wasmd/x/wasm/keeper"
+	"github.com/CosmWasm/wasmd/x/wasm/simulation"
+	"github.com/CosmWasm/wasmd/x/wasm/types"
 )
 
 var (
@@ -281,7 +280,7 @@ func getExpectedLibwasmVersion() string {
 		panic("can't read build info")
 	}
 	for _, d := range buildInfo.Deps {
-		if d.Path != "github.com/CosmWasm/wasmvm/v3" {
+		if d.Path != "github.com/CosmWasm/wasmvm/v2" {
 			continue
 		}
 		if d.Replace != nil {
@@ -302,10 +301,10 @@ func getExpectedLibwasmVersion() string {
 // two is patched. In such cases it is advised to not execute the check.
 //
 // An alternative method to obtain the libwasmvm version loaded at runtime is executing
-// `vsld query wasm libwasmvm-version`.
+// `wasmd query wasm libwasmvm-version`.
 func CheckLibwasmVersion(wasmExpectedVersion string) error {
 	if wasmExpectedVersion == "" {
-		return errors.New("wasmvm module not exist")
+		return fmt.Errorf("wasmvm module not exist")
 	}
 	wasmVersion, err := wasmvm.LibwasmvmVersion()
 	if err != nil {

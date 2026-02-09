@@ -3,12 +3,12 @@ package keeper
 import (
 	"errors"
 
-	wasmvm "github.com/CosmWasm/wasmvm/v3"
-	wasmvmtypes "github.com/CosmWasm/wasmvm/v3/types"
+	wasmvm "github.com/CosmWasm/wasmvm/v2"
+	wasmvmtypes "github.com/CosmWasm/wasmvm/v2/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/EuclidProtocol/vsld/x/wasm/types"
+	"github.com/CosmWasm/wasmd/x/wasm/types"
 )
 
 const (
@@ -48,7 +48,7 @@ func canonicalizeAddress(human string) ([]byte, uint64, error) {
 func validateAddress(human string) (uint64, error) {
 	canonicalized, err := sdk.AccAddressFromBech32(human)
 	if err != nil {
-		return costCanonical, err
+		return costValidate, err
 	}
 	// AccAddressFromBech32 already calls VerifyAddressFormat, so we can just humanize and compare
 	if canonicalized.String() != human {

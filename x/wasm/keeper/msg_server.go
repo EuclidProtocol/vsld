@@ -2,13 +2,12 @@ package keeper
 
 import (
 	"context"
-	"slices"
 
 	errorsmod "cosmossdk.io/errors"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/EuclidProtocol/vsld/x/wasm/types"
+	"github.com/CosmWasm/wasmd/x/wasm/types"
 )
 
 var _ types.MsgServer = msgServer{}
@@ -76,7 +75,7 @@ func (m msgServer) InstantiateContract(ctx context.Context, msg *types.MsgInstan
 	}, nil
 }
 
-// InstantiateContract2 instantiate a new contract with a predictable address generated
+// InstantiateContract2 instantiate a new contract with predicatable address generated
 func (m msgServer) InstantiateContract2(ctx context.Context, msg *types.MsgInstantiateContract2) (*types.MsgInstantiateContract2Response, error) {
 	if err := msg.ValidateBasic(); err != nil {
 		return nil, err
@@ -362,7 +361,7 @@ func (m msgServer) AddCodeUploadParamsAddresses(goCtx context.Context, req *type
 
 	addresses := params.CodeUploadAccess.Addresses
 	for _, newAddr := range req.Addresses {
-		if !slices.Contains(addresses, newAddr) {
+		if !contains(addresses, newAddr) {
 			addresses = append(addresses, newAddr)
 		}
 	}
@@ -394,7 +393,7 @@ func (m msgServer) RemoveCodeUploadParamsAddresses(goCtx context.Context, req *t
 	addresses := params.CodeUploadAccess.Addresses
 	newAddresses := make([]string, 0)
 	for _, addr := range addresses {
-		if slices.Contains(req.Addresses, addr) {
+		if contains(req.Addresses, addr) {
 			continue
 		}
 		newAddresses = append(newAddresses, addr)
@@ -407,6 +406,15 @@ func (m msgServer) RemoveCodeUploadParamsAddresses(goCtx context.Context, req *t
 	}
 
 	return &types.MsgRemoveCodeUploadParamsAddressesResponse{}, nil
+}
+
+func contains[T comparable](src []T, o T) bool {
+	for _, v := range src {
+		if v == o {
+			return true
+		}
+	}
+	return false
 }
 
 func (m msgServer) selectAuthorizationPolicy(ctx context.Context, actor string) types.AuthorizationPolicy {

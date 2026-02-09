@@ -54,9 +54,7 @@ func (app *WasmApp) ExportAppStateAndValidators(forZeroHeight bool, jailAllowedA
 //
 //	in favor of export at a block height
 func (app *WasmApp) prepForZeroHeightGenesis(ctx sdk.Context, jailAllowedAddrs []string) {
-	// check if there is a allowed address list
 	applyAllowedAddrs := len(jailAllowedAddrs) > 0
-
 	allowedAddrsMap := make(map[string]bool)
 
 	for _, addr := range jailAllowedAddrs {
@@ -66,6 +64,9 @@ func (app *WasmApp) prepForZeroHeightGenesis(ctx sdk.Context, jailAllowedAddrs [
 		}
 		allowedAddrsMap[addr] = true
 	}
+
+	/* Just to be safe, assert the invariants on current state. */
+	app.CrisisKeeper.AssertInvariants(ctx)
 
 	/* Handle fee distribution state. */
 

@@ -6,8 +6,7 @@ import (
 	"testing"
 	"time"
 
-	wasmvm "github.com/CosmWasm/wasmvm/v3"
-	ibctesting "github.com/cosmos/ibc-go/v10/testing"
+	wasmvm "github.com/CosmWasm/wasmvm/v2"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
@@ -20,9 +19,9 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/x/authz"
 
-	"github.com/EuclidProtocol/vsld/tests/e2e"
-	wasmibctesting "github.com/EuclidProtocol/vsld/tests/wasmibctesting"
-	"github.com/EuclidProtocol/vsld/x/wasm/types"
+	"github.com/CosmWasm/wasmd/tests/e2e"
+	"github.com/CosmWasm/wasmd/tests/ibctesting"
+	"github.com/CosmWasm/wasmd/x/wasm/types"
 )
 
 func TestGrants(t *testing.T) {
@@ -34,8 +33,8 @@ func TestGrants(t *testing.T) {
 	// - balance A reduced (on success)
 	// - balance B not touched
 
-	coord := wasmibctesting.NewCoordinator(t, 1)
-	chain := wasmibctesting.NewWasmTestChain(coord.GetChain(ibctesting.GetChainID(1)))
+	coord := ibctesting.NewCoordinator(t, 1)
+	chain := coord.GetChain(ibctesting.GetChainID(1))
 	contractAddr := e2e.InstantiateReflectContract(t, chain)
 	require.NotEmpty(t, contractAddr)
 
@@ -131,8 +130,8 @@ func TestStoreCodeGrant(t *testing.T) {
 	reflectCodeChecksum, err := wasmvm.CreateChecksum(reflectWasmCode)
 	require.NoError(t, err)
 
-	coord := wasmibctesting.NewCoordinator(t, 1)
-	chain := wasmibctesting.NewWasmTestChain(coord.GetChain(ibctesting.GetChainID(1)))
+	coord := ibctesting.NewCoordinator(t, 1)
+	chain := coord.GetChain(ibctesting.GetChainID(1))
 
 	granterAddr := chain.SenderAccount.GetAddress()
 	granteePrivKey := secp256k1.GenPrivKey()
@@ -219,8 +218,8 @@ func TestGzipStoreCodeGrant(t *testing.T) {
 	hackatomCodeChecksum, err := wasmvm.CreateChecksum(hackatomWasmCode)
 	require.NoError(t, err)
 
-	coord := wasmibctesting.NewCoordinator(t, 1)
-	chain := wasmibctesting.NewWasmTestChain(coord.GetChain(ibctesting.GetChainID(1)))
+	coord := ibctesting.NewCoordinator(t, 1)
+	chain := coord.GetChain(ibctesting.GetChainID(1))
 
 	granterAddr := chain.SenderAccount.GetAddress()
 	granteePrivKey := secp256k1.GenPrivKey()
@@ -301,8 +300,8 @@ func TestBrokenGzipStoreCodeGrant(t *testing.T) {
 	brokenGzipWasmCode, err := os.ReadFile("../../x/wasm/keeper/testdata/broken_crc.gzip")
 	require.NoError(t, err)
 
-	coord := wasmibctesting.NewCoordinator(t, 1)
-	chain := wasmibctesting.NewWasmTestChain(coord.GetChain(ibctesting.GetChainID(1)))
+	coord := ibctesting.NewCoordinator(t, 1)
+	chain := coord.GetChain(ibctesting.GetChainID(1))
 
 	granterAddr := chain.SenderAccount.GetAddress()
 	granteePrivKey := secp256k1.GenPrivKey()

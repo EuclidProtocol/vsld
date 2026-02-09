@@ -6,21 +6,21 @@ import (
 	"fmt"
 	"testing"
 
-	wasmvmtypes "github.com/CosmWasm/wasmvm/v3/types"
+	wasmvmtypes "github.com/CosmWasm/wasmvm/v2/types"
 	abci "github.com/cometbft/cometbft/abci/types"
 	"github.com/cosmos/gogoproto/proto"
 	"github.com/stretchr/testify/require"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	wasmibctesting "github.com/EuclidProtocol/vsld/tests/wasmibctesting"
-	"github.com/EuclidProtocol/vsld/x/wasm/keeper/testdata"
-	"github.com/EuclidProtocol/vsld/x/wasm/types"
+	"github.com/CosmWasm/wasmd/tests/ibctesting"
+	"github.com/CosmWasm/wasmd/x/wasm/keeper/testdata"
+	"github.com/CosmWasm/wasmd/x/wasm/types"
 )
 
 // InstantiateStargateReflectContract stores and instantiates the reflect contract shipped with CosmWasm 1.5.3.
 // This instance still expects the old CosmosMsg.Stargate variant instead of the new CosmosMsg.Any.
-func InstantiateStargateReflectContract(t *testing.T, chain *wasmibctesting.WasmTestChain) sdk.AccAddress {
+func InstantiateStargateReflectContract(t *testing.T, chain *ibctesting.TestChain) sdk.AccAddress {
 	codeID := chain.StoreCodeFile("../../x/wasm/keeper/testdata/reflect_1_5.wasm").CodeID
 	contractAddr := chain.InstantiateContract(codeID, []byte(`{}`))
 	require.NotEmpty(t, contractAddr)
@@ -28,7 +28,7 @@ func InstantiateStargateReflectContract(t *testing.T, chain *wasmibctesting.Wasm
 }
 
 // InstantiateReflectContract stores and instantiates a 2.0 reflect contract instance.
-func InstantiateReflectContract(t *testing.T, chain *wasmibctesting.WasmTestChain) sdk.AccAddress {
+func InstantiateReflectContract(t *testing.T, chain *ibctesting.TestChain) sdk.AccAddress {
 	codeID := chain.StoreCodeFile("../../x/wasm/keeper/testdata/reflect_2_0.wasm").CodeID
 	contractAddr := chain.InstantiateContract(codeID, []byte(`{}`))
 	require.NotEmpty(t, contractAddr)
@@ -36,7 +36,7 @@ func InstantiateReflectContract(t *testing.T, chain *wasmibctesting.WasmTestChai
 }
 
 // MustExecViaReflectContract submit execute message to send payload to reflect contract
-func MustExecViaReflectContract(t *testing.T, chain *wasmibctesting.WasmTestChain, contractAddr sdk.AccAddress, msgs ...wasmvmtypes.CosmosMsg) *abci.ExecTxResult {
+func MustExecViaReflectContract(t *testing.T, chain *ibctesting.TestChain, contractAddr sdk.AccAddress, msgs ...wasmvmtypes.CosmosMsg) *abci.ExecTxResult {
 	rsp, err := ExecViaReflectContract(t, chain, contractAddr, msgs)
 	require.NoError(t, err)
 	return rsp
@@ -47,7 +47,7 @@ type sdkMessageType interface {
 	sdk.Msg
 }
 
-func MustExecViaStargateReflectContract[T sdkMessageType](t *testing.T, chain *wasmibctesting.WasmTestChain, contractAddr sdk.AccAddress, msgs ...T) *abci.ExecTxResult {
+func MustExecViaStargateReflectContract[T sdkMessageType](t *testing.T, chain *ibctesting.TestChain, contractAddr sdk.AccAddress, msgs ...T) *abci.ExecTxResult {
 	require.NotEmpty(t, msgs)
 	// convert messages to stargate variant
 	vmMsgs := make([]string, len(msgs))
@@ -70,7 +70,7 @@ func MustExecViaStargateReflectContract[T sdkMessageType](t *testing.T, chain *w
 	return rsp
 }
 
-func MustExecViaAnyReflectContract[T sdkMessageType](t *testing.T, chain *wasmibctesting.WasmTestChain, contractAddr sdk.AccAddress, msgs ...T) *abci.ExecTxResult {
+func MustExecViaAnyReflectContract[T sdkMessageType](t *testing.T, chain *ibctesting.TestChain, contractAddr sdk.AccAddress, msgs ...T) *abci.ExecTxResult {
 	vmMsgs := make([]wasmvmtypes.CosmosMsg, len(msgs))
 	for i, m := range msgs {
 		bz, err := chain.Codec.Marshal(m)
@@ -88,7 +88,7 @@ func MustExecViaAnyReflectContract[T sdkMessageType](t *testing.T, chain *wasmib
 }
 
 // ExecViaReflectContract submit execute message to send payload to reflect contract
-func ExecViaReflectContract(t *testing.T, chain *wasmibctesting.WasmTestChain, contractAddr sdk.AccAddress, msgs []wasmvmtypes.CosmosMsg) (*abci.ExecTxResult, error) {
+func ExecViaReflectContract(t *testing.T, chain *ibctesting.TestChain, contractAddr sdk.AccAddress, msgs []wasmvmtypes.CosmosMsg) (*abci.ExecTxResult, error) {
 	require.NotEmpty(t, msgs)
 	reflectSend := testdata.ReflectHandleMsg{
 		Reflect: &testdata.ReflectPayload{Msgs: msgs},

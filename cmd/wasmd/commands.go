@@ -31,14 +31,14 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/module"
 	authcmd "github.com/cosmos/cosmos-sdk/x/auth/client/cli"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
+	"github.com/cosmos/cosmos-sdk/x/crisis"
 	genutilcli "github.com/cosmos/cosmos-sdk/x/genutil/client/cli"
 
-	wasmcli "github.com/EuclidProtocol/vsld/x/wasm/client/cli"
-
-	"github.com/EuclidProtocol/vsld/app"
-	"github.com/EuclidProtocol/vsld/x/wasm"
-	wasmkeeper "github.com/EuclidProtocol/vsld/x/wasm/keeper"
-	wasmtypes "github.com/EuclidProtocol/vsld/x/wasm/types"
+	"github.com/CosmWasm/wasmd/app"
+	"github.com/CosmWasm/wasmd/x/wasm"
+	wasmcli "github.com/CosmWasm/wasmd/x/wasm/client/cli"
+	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
+	wasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
 )
 
 // initCometBFTConfig helps to override default CometBFT Config values.
@@ -126,6 +126,7 @@ func initRootCmd(
 }
 
 func addModuleInitFlags(startCmd *cobra.Command) {
+	crisis.AddModuleInitFlags(startCmd)
 	wasm.AddModuleInitFlags(startCmd)
 }
 
@@ -255,7 +256,7 @@ func appExport(
 }
 
 var tempDir = func() string {
-	dir, err := os.MkdirTemp("", "vsld")
+	dir, err := os.MkdirTemp("", "wasmd")
 	if err != nil {
 		panic("failed to create temp dir: " + err.Error())
 	}

@@ -11,13 +11,13 @@ import (
 	"github.com/cosmos/cosmos-sdk/runtime"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/EuclidProtocol/vsld/x/wasm/types"
+	"github.com/CosmWasm/wasmd/x/wasm/types"
 )
 
 // StoreCodeInfoFn stores code info
 type StoreCodeInfoFn func(ctx context.Context, codeID uint64, codeInfo types.CodeInfo)
 
-// wasmKeeper abstract keeper
+// Keeper abstract keeper
 type wasmKeeper interface {
 	SetParams(ctx context.Context, ps types.Params) error
 }

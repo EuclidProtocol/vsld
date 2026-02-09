@@ -6,10 +6,10 @@ import (
 	"errors"
 	"fmt"
 
-	wasmvmtypes "github.com/CosmWasm/wasmvm/v3/types"
+	wasmvmtypes "github.com/CosmWasm/wasmvm/v2/types"
 	abci "github.com/cometbft/cometbft/abci/types"
 	"github.com/cosmos/gogoproto/proto"
-	channeltypes "github.com/cosmos/ibc-go/v10/modules/core/04-channel/types"
+	channeltypes "github.com/cosmos/ibc-go/v8/modules/core/04-channel/types"
 
 	errorsmod "cosmossdk.io/errors"
 	storetypes "cosmossdk.io/store/types"
@@ -23,7 +23,7 @@ import (
 	distributiontypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 
-	"github.com/EuclidProtocol/vsld/x/wasm/types"
+	"github.com/CosmWasm/wasmd/x/wasm/types"
 )
 
 type QueryHandler struct {
@@ -84,18 +84,13 @@ func (q QueryHandler) GasConsumed() uint64 {
 
 type CustomQuerier func(ctx sdk.Context, request json.RawMessage) ([]byte, error)
 
-type (
-	stargateQuerierFn func(ctx sdk.Context, request *wasmvmtypes.StargateQuery) ([]byte, error)
-	grpcQuerierFn     func(ctx sdk.Context, request *wasmvmtypes.GrpcQuery) (proto.Message, error)
-)
-
 type QueryPlugins struct {
 	Bank         func(ctx sdk.Context, request *wasmvmtypes.BankQuery) ([]byte, error)
 	Custom       CustomQuerier
 	IBC          func(ctx sdk.Context, caller sdk.AccAddress, request *wasmvmtypes.IBCQuery) ([]byte, error)
 	Staking      func(ctx sdk.Context, request *wasmvmtypes.StakingQuery) ([]byte, error)
-	Stargate     stargateQuerierFn
-	Grpc         grpcQuerierFn
+	Stargate     func(ctx sdk.Context, request *wasmvmtypes.StargateQuery) ([]byte, error)
+	Grpc         func(ctx sdk.Context, request *wasmvmtypes.GrpcQuery) (proto.Message, error)
 	Wasm         func(ctx sdk.Context, request *wasmvmtypes.WasmQuery) ([]byte, error)
 	Distribution func(ctx sdk.Context, request *wasmvmtypes.DistributionQuery) ([]byte, error)
 }
@@ -126,7 +121,7 @@ func DefaultQueryPlugins(
 		Custom:       NoCustomQuerier,
 		IBC:          IBCQuerier(wasm, channelKeeper),
 		Staking:      StakingQuerier(staking, distKeeper),
-		Stargate:     RejectStargateQuerier,
+		Stargate:     RejectStargateQuerier(),
 		Grpc:         RejectGrpcQuerier,
 		Wasm:         WasmQuerier(wasm),
 		Distribution: DistributionQuerier(distKeeper),
@@ -238,7 +233,7 @@ func BankQuerier(bankKeeper types.BankViewKeeper) func(ctx sdk.Context, request 
 				return nil, errorsmod.Wrap(sdkerrors.ErrNotFound, request.DenomMetadata.Denom)
 			}
 			res := wasmvmtypes.DenomMetadataResponse{
-				Metadata: ConvertSdkDenomMetadataTovsldenomMetadata(denomMetadata),
+				Metadata: ConvertSdkDenomMetadataToWasmDenomMetadata(denomMetadata),
 			}
 			return json.Marshal(res)
 		}
@@ -248,7 +243,7 @@ func BankQuerier(bankKeeper types.BankViewKeeper) func(ctx sdk.Context, request 
 				return nil, sdkerrors.ErrInvalidRequest
 			}
 			res := wasmvmtypes.AllDenomMetadataResponse{
-				Metadata: ConvertSdkDenomMetadatasTovsldenomMetadatas(bankQueryRes.Metadatas),
+				Metadata: ConvertSdkDenomMetadatasToWasmDenomMetadatas(bankQueryRes.Metadatas),
 				NextKey:  bankQueryRes.Pagination.NextKey,
 			}
 			return json.Marshal(res)
@@ -337,14 +332,9 @@ func IBCQuerier(wasm contractMetaDataSource, channelKeeper types.ChannelKeeper) 
 	}
 }
 
-// RejectGrpcQuerier is a querier that rejects all gRPC queries.
-//
-// Use AcceptListGrpcQuerier instead to create a list of accepted query types.
 func RejectGrpcQuerier(ctx sdk.Context, request *wasmvmtypes.GrpcQuery) (proto.Message, error) {
-	return nil, wasmvmtypes.UnsupportedRequest{Kind: "gRPC queries are disabled on this chain"}
+	return nil, wasmvmtypes.UnsupportedRequest{Kind: "gRPC queries are disabled"}
 }
-
-var _ grpcQuerierFn = RejectGrpcQuerier // just a type check
 
 // AcceptListGrpcQuerier supports a preconfigured set of gRPC queries only.
 // All arguments must be non nil.
@@ -354,7 +344,7 @@ var _ grpcQuerierFn = RejectGrpcQuerier // just a type check
 //
 // These queries can be set via WithQueryPlugins option in the wasm keeper constructor:
 // WithQueryPlugins(&QueryPlugins{Grpc: AcceptListGrpcQuerier(acceptList, queryRouter, codec)})
-func AcceptListGrpcQuerier(acceptList AcceptedQueries, queryRouter GRPCQueryRouter, codec codec.Codec) grpcQuerierFn {
+func AcceptListGrpcQuerier(acceptList AcceptedQueries, queryRouter GRPCQueryRouter, codec codec.Codec) func(ctx sdk.Context, request *wasmvmtypes.GrpcQuery) (proto.Message, error) {
 	return func(ctx sdk.Context, request *wasmvmtypes.GrpcQuery) (proto.Message, error) {
 		protoResponseFn, accepted := acceptList[request.Path]
 		if !accepted {
@@ -385,14 +375,12 @@ func AcceptListGrpcQuerier(acceptList AcceptedQueries, queryRouter GRPCQueryRout
 	}
 }
 
-// RejectStargateQuerier is a querier that rejects all stargate queries.
-//
-// Use AcceptListStargateQuerier instead to create a list of accepted query types.
-func RejectStargateQuerier(ctx sdk.Context, request *wasmvmtypes.StargateQuery) ([]byte, error) {
-	return nil, wasmvmtypes.UnsupportedRequest{Kind: "Stargate queries are disabled on this chain"}
+// RejectStargateQuerier rejects all stargate queries
+func RejectStargateQuerier() func(ctx sdk.Context, request *wasmvmtypes.StargateQuery) ([]byte, error) {
+	return func(ctx sdk.Context, request *wasmvmtypes.StargateQuery) ([]byte, error) {
+		return nil, wasmvmtypes.UnsupportedRequest{Kind: "Stargate queries are disabled"}
+	}
 }
-
-var _ stargateQuerierFn = RejectStargateQuerier // just a type check
 
 // AcceptedQueries defines accepted Stargate or gRPC queries as a map where the key is the query path
 // and the value is a function returning a proto.Message.
@@ -412,7 +400,7 @@ type AcceptedQueries map[string]func() proto.Message
 //
 // These queries can be set via WithQueryPlugins option in the wasm keeper constructor:
 // WithQueryPlugins(&QueryPlugins{Stargate: AcceptListStargateQuerier(acceptList, queryRouter, codec)})
-func AcceptListStargateQuerier(acceptList AcceptedQueries, queryRouter GRPCQueryRouter, codec codec.Codec) stargateQuerierFn {
+func AcceptListStargateQuerier(acceptList AcceptedQueries, queryRouter GRPCQueryRouter, codec codec.Codec) func(ctx sdk.Context, request *wasmvmtypes.StargateQuery) ([]byte, error) {
 	return func(ctx sdk.Context, request *wasmvmtypes.StargateQuery) ([]byte, error) {
 		protoResponseFn, accepted := acceptList[request.Path]
 		if !accepted {
@@ -594,7 +582,7 @@ func sdkToFullDelegation(ctx sdk.Context, keeper types.StakingKeeper, distKeeper
 	delegationCoins := ConvertSdkCoinToWasmCoin(amount)
 
 	// FIXME: this is very rough but better than nothing...
-	// https://github.com/EuclidProtocol/vsld/issues/282
+	// https://github.com/CosmWasm/wasmd/issues/282
 	// if this (val, delegate) pair is receiving a redelegation, it cannot redelegate more
 	// otherwise, it can redelegate the full amount
 	// (there are cases of partial funds redelegated, but this is a start)
@@ -681,12 +669,11 @@ func WasmQuerier(k wasmQueryKeeper) func(ctx sdk.Context, request *wasmvmtypes.W
 					Wrapf("address %s", contractAddr)
 			}
 			res := wasmvmtypes.ContractInfoResponse{
-				CodeID:   info.CodeID,
-				Creator:  info.Creator,
-				Admin:    info.Admin,
-				Pinned:   k.IsPinnedCode(ctx, info.CodeID),
-				IBCPort:  info.IBCPortID,
-				IBC2Port: info.IBC2PortID,
+				CodeID:  info.CodeID,
+				Creator: info.Creator,
+				Admin:   info.Admin,
+				Pinned:  k.IsPinnedCode(ctx, info.CodeID),
+				IBCPort: info.IBCPortID,
 			}
 			return json.Marshal(res)
 		case request.CodeInfo != nil:
@@ -730,7 +717,7 @@ func DistributionQuerier(k types.DistributionKeeper) func(ctx sdk.Context, reque
 				return nil, err
 			}
 			return json.Marshal(wasmvmtypes.DelegationRewardsResponse{
-				Rewards: ConvertSDKDecCoinsTovsldecCoins(got.Rewards),
+				Rewards: ConvertSDKDecCoinsToWasmDecCoins(got.Rewards),
 			})
 		case req.DelegationTotalRewards != nil:
 			got, err := k.DelegationTotalRewards(ctx, &distributiontypes.QueryDelegationTotalRewardsRequest{
@@ -741,7 +728,7 @@ func DistributionQuerier(k types.DistributionKeeper) func(ctx sdk.Context, reque
 			}
 			return json.Marshal(wasmvmtypes.DelegationTotalRewardsResponse{
 				Rewards: ConvertSDKDelegatorRewardsToWasmRewards(got.Rewards),
-				Total:   ConvertSDKDecCoinsTovsldecCoins(got.Total),
+				Total:   ConvertSDKDecCoinsToWasmDecCoins(got.Total),
 			})
 		case req.DelegatorValidators != nil:
 			got, err := k.DelegatorValidators(ctx, &distributiontypes.QueryDelegatorValidatorsRequest{
@@ -763,15 +750,15 @@ func ConvertSDKDelegatorRewardsToWasmRewards(rewards []distributiontypes.Delegat
 	r := make([]wasmvmtypes.DelegatorReward, len(rewards))
 	for i, v := range rewards {
 		r[i] = wasmvmtypes.DelegatorReward{
-			Reward:           ConvertSDKDecCoinsTovsldecCoins(v.Reward),
+			Reward:           ConvertSDKDecCoinsToWasmDecCoins(v.Reward),
 			ValidatorAddress: v.ValidatorAddress,
 		}
 	}
 	return r
 }
 
-// ConvertSDKDecCoinsTovsldecCoins convert sdk to wasmvm type
-func ConvertSDKDecCoinsTovsldecCoins(src sdk.DecCoins) []wasmvmtypes.DecCoin {
+// ConvertSDKDecCoinsToWasmDecCoins convert sdk to wasmvm type
+func ConvertSDKDecCoinsToWasmDecCoins(src sdk.DecCoins) []wasmvmtypes.DecCoin {
 	r := make([]wasmvmtypes.DecCoin, len(src))
 	for i, v := range src {
 		r[i] = wasmvmtypes.DecCoin{
@@ -811,18 +798,18 @@ func ConvertToDenomsMetadataRequest(wasmRequest *wasmvmtypes.AllDenomMetadataQue
 	return ret
 }
 
-func ConvertSdkDenomMetadatasTovsldenomMetadatas(metadata []banktypes.Metadata) []wasmvmtypes.DenomMetadata {
+func ConvertSdkDenomMetadatasToWasmDenomMetadatas(metadata []banktypes.Metadata) []wasmvmtypes.DenomMetadata {
 	converted := make([]wasmvmtypes.DenomMetadata, len(metadata))
 	for i, m := range metadata {
-		converted[i] = ConvertSdkDenomMetadataTovsldenomMetadata(m)
+		converted[i] = ConvertSdkDenomMetadataToWasmDenomMetadata(m)
 	}
 	return converted
 }
 
-func ConvertSdkDenomMetadataTovsldenomMetadata(metadata banktypes.Metadata) wasmvmtypes.DenomMetadata {
+func ConvertSdkDenomMetadataToWasmDenomMetadata(metadata banktypes.Metadata) wasmvmtypes.DenomMetadata {
 	return wasmvmtypes.DenomMetadata{
 		Description: metadata.Description,
-		DenomUnits:  ConvertSdkDenomUnitsTovsldenomUnits(metadata.DenomUnits),
+		DenomUnits:  ConvertSdkDenomUnitsToWasmDenomUnits(metadata.DenomUnits),
 		Base:        metadata.Base,
 		Display:     metadata.Display,
 		Name:        metadata.Name,
@@ -832,17 +819,13 @@ func ConvertSdkDenomMetadataTovsldenomMetadata(metadata banktypes.Metadata) wasm
 	}
 }
 
-func ConvertSdkDenomUnitsTovsldenomUnits(denomUnits []*banktypes.DenomUnit) []wasmvmtypes.DenomUnit {
+func ConvertSdkDenomUnitsToWasmDenomUnits(denomUnits []*banktypes.DenomUnit) []wasmvmtypes.DenomUnit {
 	converted := make([]wasmvmtypes.DenomUnit, len(denomUnits))
 	for i, u := range denomUnits {
 		converted[i] = wasmvmtypes.DenomUnit{
 			Denom:    u.Denom,
 			Exponent: u.Exponent,
 			Aliases:  u.Aliases,
-		}
-		// Returning nil may break cosmwasm-std
-		if u.Aliases == nil {
-			converted[i].Aliases = []string{}
 		}
 	}
 	return converted

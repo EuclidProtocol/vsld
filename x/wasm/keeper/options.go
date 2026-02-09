@@ -8,7 +8,7 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/EuclidProtocol/vsld/x/wasm/types"
+	"github.com/CosmWasm/wasmd/x/wasm/types"
 )
 
 type optsFn func(*Keeper)
@@ -175,8 +175,8 @@ func WithAcceptedAccountTypesOnContractInstantiation(accts ...sdk.AccountI) Opti
 	})
 }
 
-// WithGovSubMsgAuthZPropagated overwrites the default gov authorization policy for sub-messages
-func WithGovSubMsgAuthZPropagated(entries ...types.AuthorizationPolicyAction) Option {
+// WitGovSubMsgAuthZPropagated overwrites the default gov authorization policy for sub-messages
+func WitGovSubMsgAuthZPropagated(entries ...types.AuthorizationPolicyAction) Option {
 	x := make(map[types.AuthorizationPolicyAction]struct{}, len(entries))
 	for _, e := range entries {
 		x[e] = struct{}{}

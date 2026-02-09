@@ -6,7 +6,6 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
-	"slices"
 	"strconv"
 	"strings"
 	"testing"
@@ -15,6 +14,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"github.com/tidwall/gjson"
+	"golang.org/x/exp/slices"
 
 	"github.com/cosmos/cosmos-sdk/client/grpc/cmtservice"
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -31,8 +31,8 @@ type (
 	RunErrorAssert func(t assert.TestingT, err error, msgAndArgs ...interface{}) (ok bool)
 )
 
-// vsldCli wraps the command line interface
-type vsldCli struct {
+// WasmdCli wraps the command line interface
+type WasmdCli struct {
 	t              *testing.T
 	nodeAddress    string
 	chainID        string
@@ -46,9 +46,9 @@ type vsldCli struct {
 	nodesCount     int
 }
 
-// NewvsldCLI constructor
-func NewvsldCLI(t *testing.T, sut *SystemUnderTest, verbose bool) *vsldCli {
-	return NewvsldCLIx(
+// NewWasmdCLI constructor
+func NewWasmdCLI(t *testing.T, sut *SystemUnderTest, verbose bool) *WasmdCli {
+	return NewWasmdCLIx(
 		t,
 		sut.ExecBinary,
 		sut.rpcAddr,
@@ -63,8 +63,8 @@ func NewvsldCLI(t *testing.T, sut *SystemUnderTest, verbose bool) *vsldCli {
 	)
 }
 
-// NewvsldCLIx extended constructor
-func NewvsldCLIx(
+// NewWasmdCLIx extended constructor
+func NewWasmdCLIx(
 	t *testing.T,
 	execBinary string,
 	nodeAddress string,
@@ -76,11 +76,11 @@ func NewvsldCLIx(
 	debug bool,
 	assertErrorFn RunErrorAssert,
 	expTXCommitted bool,
-) *vsldCli {
+) *WasmdCli {
 	if strings.TrimSpace(execBinary) == "" {
 		panic("executable binary name must not be empty")
 	}
-	return &vsldCli{
+	return &WasmdCli{
 		t:              t,
 		execBinary:     execBinary,
 		nodeAddress:    nodeAddress,
@@ -96,15 +96,15 @@ func NewvsldCLIx(
 }
 
 // WithRunErrorsIgnored does not fail on any error
-func (c vsldCli) WithRunErrorsIgnored() vsldCli {
+func (c WasmdCli) WithRunErrorsIgnored() WasmdCli {
 	return c.WithRunErrorMatcher(func(t assert.TestingT, err error, msgAndArgs ...interface{}) bool {
 		return true
 	})
 }
 
 // WithRunErrorMatcher assert function to ensure run command error value
-func (c vsldCli) WithRunErrorMatcher(f RunErrorAssert) vsldCli {
-	return *NewvsldCLIx(
+func (c WasmdCli) WithRunErrorMatcher(f RunErrorAssert) WasmdCli {
+	return *NewWasmdCLIx(
 		c.t,
 		c.execBinary,
 		c.nodeAddress,
@@ -119,8 +119,8 @@ func (c vsldCli) WithRunErrorMatcher(f RunErrorAssert) vsldCli {
 	)
 }
 
-func (c vsldCli) WithNodeAddress(nodeAddr string) vsldCli {
-	return *NewvsldCLIx(
+func (c WasmdCli) WithNodeAddress(nodeAddr string) WasmdCli {
+	return *NewWasmdCLIx(
 		c.t,
 		c.execBinary,
 		nodeAddr,
@@ -135,8 +135,8 @@ func (c vsldCli) WithNodeAddress(nodeAddr string) vsldCli {
 	)
 }
 
-func (c vsldCli) WithAssertTXUncommitted() vsldCli {
-	return *NewvsldCLIx(
+func (c WasmdCli) WithAssertTXUncommitted() WasmdCli {
+	return *NewWasmdCLIx(
 		c.t,
 		c.execBinary,
 		c.nodeAddress,
@@ -151,9 +151,9 @@ func (c vsldCli) WithAssertTXUncommitted() vsldCli {
 	)
 }
 
-// CustomCommand main entry for executing vsld cli commands.
+// CustomCommand main entry for executing wasmd cli commands.
 // When configured, method blocks until tx is committed.
-func (c vsldCli) CustomCommand(args ...string) string {
+func (c WasmdCli) CustomCommand(args ...string) string {
 	if c.fees != "" && !slices.ContainsFunc(args, func(s string) bool {
 		return strings.HasPrefix(s, "--fees")
 	}) {
@@ -171,7 +171,7 @@ func (c vsldCli) CustomCommand(args ...string) string {
 }
 
 // wait for tx committed on chain
-func (c vsldCli) awaitTxCommitted(submitResp string, timeout ...time.Duration) (string, bool) {
+func (c WasmdCli) awaitTxCommitted(submitResp string, timeout ...time.Duration) (string, bool) {
 	RequireTxSuccess(c.t, submitResp)
 	txHash := gjson.Get(submitResp, "txhash")
 	require.True(c.t, txHash.Exists())
@@ -189,26 +189,26 @@ func (c vsldCli) awaitTxCommitted(submitResp string, timeout ...time.Duration) (
 	return "", false
 }
 
-// Keys vsld keys CLI command
-func (c vsldCli) Keys(args ...string) string {
+// Keys wasmd keys CLI command
+func (c WasmdCli) Keys(args ...string) string {
 	args = c.withKeyringFlags(args...)
 	out, _ := c.run(args)
 	return out
 }
 
-// CustomQuery main entrypoint for vsld CLI queries
-func (c vsldCli) CustomQuery(args ...string) string {
+// CustomQuery main entrypoint for wasmd CLI queries
+func (c WasmdCli) CustomQuery(args ...string) string {
 	args = c.withQueryFlags(args...)
 	out, _ := c.run(args)
 	return out
 }
 
 // execute shell command
-func (c vsldCli) run(args []string) (output string, ok bool) {
+func (c WasmdCli) run(args []string) (output string, ok bool) {
 	return c.runWithInput(args, nil)
 }
 
-func (c vsldCli) runWithInput(args []string, input io.Reader) (output string, ok bool) {
+func (c WasmdCli) runWithInput(args []string, input io.Reader) (output string, ok bool) {
 	if c.Debug {
 		c.t.Logf("+++ running `%s %s`", c.execBinary, strings.Join(args, " "))
 	}
@@ -227,12 +227,12 @@ func (c vsldCli) runWithInput(args []string, input io.Reader) (output string, ok
 	return strings.TrimSpace(string(gotOut)), ok
 }
 
-func (c vsldCli) withQueryFlags(args ...string) []string {
+func (c WasmdCli) withQueryFlags(args ...string) []string {
 	args = append(args, "--output", "json")
 	return c.withChainFlags(args...)
 }
 
-func (c vsldCli) withTXFlags(args ...string) []string {
+func (c WasmdCli) withTXFlags(args ...string) []string {
 	args = append(args,
 		"--broadcast-mode", "sync",
 		"--output", "json",
@@ -243,7 +243,7 @@ func (c vsldCli) withTXFlags(args ...string) []string {
 	return c.withChainFlags(args...)
 }
 
-func (c vsldCli) withKeyringFlags(args ...string) []string {
+func (c WasmdCli) withKeyringFlags(args ...string) []string {
 	r := append(args,
 		"--home", c.homeDir,
 		"--keyring-backend", "test",
@@ -256,20 +256,20 @@ func (c vsldCli) withKeyringFlags(args ...string) []string {
 	return append(r, "--output", "json")
 }
 
-func (c vsldCli) withChainFlags(args ...string) []string {
+func (c WasmdCli) withChainFlags(args ...string) []string {
 	return append(args,
 		"--node", c.nodeAddress,
 	)
 }
 
 // WasmExecute send MsgExecute to a contract
-func (c vsldCli) WasmExecute(contractAddr, msg, from string, args ...string) string {
+func (c WasmdCli) WasmExecute(contractAddr, msg, from string, args ...string) string {
 	cmd := append([]string{"tx", "wasm", "execute", contractAddr, msg, "--from", from}, args...)
 	return c.CustomCommand(cmd...)
 }
 
 // AddKey add key to default keyring. Returns address
-func (c vsldCli) AddKey(name string) string {
+func (c WasmdCli) AddKey(name string) string {
 	cmd := c.withKeyringFlags("keys", "add", name, "--no-backup")
 	out, _ := c.run(cmd)
 	addr := gjson.Get(out, "address").String()
@@ -278,7 +278,7 @@ func (c vsldCli) AddKey(name string) string {
 }
 
 // AddKeyFromSeed recovers the key from given seed and add it to default keyring. Returns address
-func (c vsldCli) AddKeyFromSeed(name, mnemonic string) string {
+func (c WasmdCli) AddKeyFromSeed(name, mnemonic string) string {
 	cmd := c.withKeyringFlags("keys", "add", name, "--recover")
 	out, _ := c.runWithInput(cmd, strings.NewReader(mnemonic))
 	addr := gjson.Get(out, "address").String()
@@ -287,7 +287,7 @@ func (c vsldCli) AddKeyFromSeed(name, mnemonic string) string {
 }
 
 // GetKeyAddr returns address
-func (c vsldCli) GetKeyAddr(name string) string {
+func (c WasmdCli) GetKeyAddr(name string) string {
 	cmd := c.withKeyringFlags("keys", "show", name, "-a")
 	out, _ := c.run(cmd)
 	addr := strings.Trim(out, "\n")
@@ -298,7 +298,7 @@ func (c vsldCli) GetKeyAddr(name string) string {
 const defaultSrcAddr = "node0"
 
 // FundAddress sends the token amount to the destination address
-func (c vsldCli) FundAddress(destAddr, amount string) string {
+func (c WasmdCli) FundAddress(destAddr, amount string) string {
 	require.NotEmpty(c.t, destAddr)
 	require.NotEmpty(c.t, amount)
 	cmd := []string{"tx", "bank", "send", defaultSrcAddr, destAddr, amount}
@@ -308,7 +308,7 @@ func (c vsldCli) FundAddress(destAddr, amount string) string {
 }
 
 // WasmStore uploads a wasm contract to the chain. Returns code id
-func (c vsldCli) WasmStore(file string, args ...string) int {
+func (c WasmdCli) WasmStore(file string, args ...string) int {
 	if len(args) == 0 {
 		args = []string{"--from=" + defaultSrcAddr, "--gas=2500000", "--fees=3stake"}
 	}
@@ -322,7 +322,7 @@ func (c vsldCli) WasmStore(file string, args ...string) int {
 }
 
 // WasmInstantiate create a new contract instance. returns contract address
-func (c vsldCli) WasmInstantiate(codeID int, initMsg string, args ...string) string {
+func (c WasmdCli) WasmInstantiate(codeID int, initMsg string, args ...string) string {
 	if len(args) == 0 {
 		args = []string{"--label=testing", "--from=" + defaultSrcAddr, "--no-admin"}
 	}
@@ -335,20 +335,20 @@ func (c vsldCli) WasmInstantiate(codeID int, initMsg string, args ...string) str
 }
 
 // QuerySmart run smart contract query
-func (c vsldCli) QuerySmart(contractAddr, msg string, args ...string) string {
+func (c WasmdCli) QuerySmart(contractAddr, msg string, args ...string) string {
 	cmd := append([]string{"q", "wasm", "contract-state", "smart", contractAddr, msg}, args...)
 	return c.CustomQuery(cmd...)
 }
 
 // QueryBalances queries all balances for an account. Returns json response
 // Example:`{"balances":[{"denom":"node0token","amount":"1000000000"},{"denom":"stake","amount":"400000003"}],"pagination":{}}`
-func (c vsldCli) QueryBalances(addr string) string {
+func (c WasmdCli) QueryBalances(addr string) string {
 	return c.CustomQuery("q", "bank", "balances", addr)
 }
 
 // QueryBalance returns balance amount for given denom.
 // 0 when not found
-func (c vsldCli) QueryBalance(addr, denom string) int64 {
+func (c WasmdCli) QueryBalance(addr, denom string) int64 {
 	raw := c.CustomQuery("q", "bank", "balance", addr, denom)
 	require.Contains(c.t, raw, "amount", raw)
 	return gjson.Get(raw, "balance.amount").Int()
@@ -356,13 +356,13 @@ func (c vsldCli) QueryBalance(addr, denom string) int64 {
 
 // QueryTotalSupply returns total amount of tokens for a given denom.
 // 0 when not found
-func (c vsldCli) QueryTotalSupply(denom string) int64 {
+func (c WasmdCli) QueryTotalSupply(denom string) int64 {
 	raw := c.CustomQuery("q", "bank", "total-supply")
 	require.Contains(c.t, raw, "amount", raw)
 	return gjson.Get(raw, fmt.Sprintf("supply.#(denom==%q).amount", denom)).Int()
 }
 
-func (c vsldCli) GetCometBFTValidatorSet() cmtservice.GetLatestValidatorSetResponse {
+func (c WasmdCli) GetCometBFTValidatorSet() cmtservice.GetLatestValidatorSetResponse {
 	args := []string{"q", "comet-validator-set"}
 	got := c.CustomQuery(args...)
 
@@ -377,7 +377,7 @@ func (c vsldCli) GetCometBFTValidatorSet() cmtservice.GetLatestValidatorSetRespo
 }
 
 // IsInCometBftValset returns true when the given pub key is in the current active tendermint validator set
-func (c vsldCli) IsInCometBftValset(valPubKey cryptotypes.PubKey) (cmtservice.GetLatestValidatorSetResponse, bool) {
+func (c WasmdCli) IsInCometBftValset(valPubKey cryptotypes.PubKey) (cmtservice.GetLatestValidatorSetResponse, bool) {
 	valResult := c.GetCometBFTValidatorSet()
 	var found bool
 	for _, v := range valResult.Validators {
@@ -390,7 +390,7 @@ func (c vsldCli) IsInCometBftValset(valPubKey cryptotypes.PubKey) (cmtservice.Ge
 }
 
 // SubmitGovProposal submit a gov v1 proposal
-func (c vsldCli) SubmitGovProposal(proposalJson string, args ...string) string {
+func (c WasmdCli) SubmitGovProposal(proposalJson string, args ...string) string {
 	if len(args) == 0 {
 		args = []string{"--from=" + defaultSrcAddr}
 	}
@@ -403,7 +403,7 @@ func (c vsldCli) SubmitGovProposal(proposalJson string, args ...string) string {
 }
 
 // SubmitAndVoteGovProposal submit proposal, let all validators vote yes and return proposal id
-func (c vsldCli) SubmitAndVoteGovProposal(proposalJson string, args ...string) string {
+func (c WasmdCli) SubmitAndVoteGovProposal(proposalJson string, args ...string) string {
 	rsp := c.SubmitGovProposal(proposalJson, args...)
 	RequireTxSuccess(c.t, rsp)
 	raw := c.CustomQuery("q", "gov", "proposals", "--depositor", c.GetKeyAddr(defaultSrcAddr))
@@ -421,7 +421,7 @@ func (c vsldCli) SubmitAndVoteGovProposal(proposalJson string, args ...string) s
 }
 
 // Version returns the current version of the client binary
-func (c vsldCli) Version() string {
+func (c WasmdCli) Version() string {
 	v, ok := c.run([]string{"version"})
 	require.True(c.t, ok)
 	return v
@@ -460,6 +460,11 @@ var (
 	ErrOutOfGasMatcher RunErrorAssert = func(t assert.TestingT, err error, args ...interface{}) bool {
 		const oogMsg = "out of gas"
 		return expErrWithMsg(t, err, args, oogMsg)
+	}
+	// ErrMaxCallDepthMatcher requires error with "max call depth exceeded" message
+	ErrMaxCallDepthMatcher RunErrorAssert = func(t assert.TestingT, err error, args ...interface{}) bool {
+		const expMsg = "max call depth exceeded"
+		return expErrWithMsg(t, err, args, expMsg)
 	}
 	// ErrTimeoutMatcher requires time out message
 	ErrTimeoutMatcher RunErrorAssert = func(t assert.TestingT, err error, args ...interface{}) bool {

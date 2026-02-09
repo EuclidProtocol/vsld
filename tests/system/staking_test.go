@@ -16,7 +16,7 @@ func TestStakeUnstake(t *testing.T) {
 
 	sut.ResetChain(t)
 
-	cli := NewvsldCLI(t, sut, verbose)
+	cli := NewWasmdCLI(t, sut, verbose)
 
 	// add genesis account with some tokens
 	account1Addr := cli.AddKey("account1")

@@ -18,6 +18,5 @@ func BuiltInCapabilities() []string {
 		"cosmwasm_2_0",
 		"cosmwasm_2_1",
 		"cosmwasm_2_2",
-		"ibc2",
 	}
 }

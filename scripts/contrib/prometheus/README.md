@@ -1,5 +1,5 @@
 # Setup
-Enable prometheus metrics in vsld:
+Enable prometheus metrics in wasmd:
 
 * Edit `$HOME/config/app.toml`
 ```toml
@@ -8,7 +8,7 @@ Enable prometheus metrics in vsld:
 # Enabled enables the application telemetry functionality. When enabled,
 # an in-memory sink is also enabled by default. Operators may also enabled
 # other sinks such as Prometheus.
-enabled = true
+enabled =true
 # ...
 
 # PrometheusRetentionTime, when positive, enables a Prometheus metrics sink.
@@ -37,10 +37,10 @@ Note the `format` parameter in the request for the endpoint:
 # Local testing
 ## Run Prometheus
 ```sh
-# port 9090 is used by vsld already
+# port 9090 is used by wasmd already
 docker run -it -v $(pwd)/scripts/contrib/prometheus:/prometheus  -p9091:9090  prom/prometheus --config.file=/prometheus/prometheus.yaml
 ```
-* Open [console](http://localhost:9091) and find `wasm_` service metrics
+* Open [console](http://localhost:9091) and find `wasm_`service metrics
 
 ## Run Grafana
 

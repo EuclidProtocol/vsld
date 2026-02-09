@@ -5,7 +5,6 @@ import (
 	"time"
 
 	"github.com/cometbft/cometbft/libs/rand"
-	ibctesting "github.com/cosmos/ibc-go/v10/testing"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
@@ -16,9 +15,9 @@ import (
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	"github.com/cosmos/cosmos-sdk/x/group"
 
-	"github.com/EuclidProtocol/vsld/tests/e2e"
-	wasmibctesting "github.com/EuclidProtocol/vsld/tests/wasmibctesting"
-	"github.com/EuclidProtocol/vsld/x/wasm/types"
+	"github.com/CosmWasm/wasmd/tests/e2e"
+	"github.com/CosmWasm/wasmd/tests/ibctesting"
+	"github.com/CosmWasm/wasmd/x/wasm/types"
 )
 
 func TestGroupWithContract(t *testing.T) {
@@ -26,8 +25,8 @@ func TestGroupWithContract(t *testing.T) {
 	// When  contract submits a proposal with try_execute
 	// Then	 the payload msg is executed
 
-	coord := wasmibctesting.NewCoordinator(t, 1)
-	chain := wasmibctesting.NewWasmTestChain(coord.GetChain(ibctesting.GetChainID(1)))
+	coord := ibctesting.NewCoordinator(t, 1)
+	chain := coord.GetChain(ibctesting.GetChainID(1))
 	contractAddr := e2e.InstantiateStargateReflectContract(t, chain)
 	chain.Fund(contractAddr, sdkmath.NewIntFromUint64(1_000_000_000))
 
@@ -55,7 +54,7 @@ func TestGroupWithContract(t *testing.T) {
 	groupID, policyAddr := createRsp.GroupId, sdk.MustAccAddressFromBech32(createRsp.GroupPolicyAddress)
 	require.NotEmpty(t, groupID)
 	chain.Fund(policyAddr, sdkmath.NewIntFromUint64(1_000_000_000))
-	// and a proposal is submitted
+	// and a proposal submitted
 	recipientAddr := sdk.AccAddress(rand.Bytes(address.Len))
 
 	payload := []sdk.Msg{banktypes.NewMsgSend(policyAddr, recipientAddr, sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdkmath.OneInt())))}
@@ -70,7 +69,7 @@ func TestGroupWithContract(t *testing.T) {
 	require.NoError(t, chain.Codec.Unmarshal(execRsp.Data, &groupRsp))
 	// require.NotEmpty(t, groupRsp.ProposalId)
 
-	// and coins are received
+	// and coins received
 	recipientBalance := chain.Balance(recipientAddr, sdk.DefaultBondDenom)
 	expBalanceAmount := sdk.NewCoin(sdk.DefaultBondDenom, sdkmath.OneInt())
 	assert.Equal(t, expBalanceAmount.String(), recipientBalance.String())
@@ -81,8 +80,8 @@ func TestGroupWithNewReflectContract(t *testing.T) {
 	// When  contract submits a proposal with try_execute
 	// Then	 the payload msg is executed
 
-	coord := wasmibctesting.NewCoordinator(t, 1)
-	chain := wasmibctesting.NewWasmTestChain(coord.GetChain(ibctesting.GetChainID(1)))
+	coord := ibctesting.NewCoordinator(t, 1)
+	chain := coord.GetChain(ibctesting.GetChainID(1))
 	contractAddr := e2e.InstantiateReflectContract(t, chain)
 	chain.Fund(contractAddr, sdkmath.NewIntFromUint64(1_000_000_000))
 

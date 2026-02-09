@@ -6,7 +6,7 @@ import "gogoproto/gogo.proto";
 import "google/protobuf/any.proto";
 import "amino/amino.proto";
 
-option go_package = "github.com/EuclidProtocol/vsld/x/wasm/types";
+option go_package = "github.com/CosmWasm/wasmd/x/wasm/types";
 option (gogoproto.goproto_getters_all) = false;
 option (gogoproto.equal_all) = true;
 
@@ -88,11 +88,10 @@ message ContractInfo {
   // Created Tx position when the contract was instantiated.
   AbsoluteTxPosition created = 5;
   string ibc_port_id = 6 [ (gogoproto.customname) = "IBCPortID" ];
-  string ibc2_port_id = 7 [ (gogoproto.customname) = "IBC2PortID" ];
 
   // Extension is an extension point to store custom metadata within the
   // persistence model.
-  google.protobuf.Any extension = 8
+  google.protobuf.Any extension = 7
       [ (cosmos_proto.accepts_interface) =
             "cosmwasm.wasm.v1.ContractInfoExtension" ];
 }

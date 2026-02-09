@@ -12,7 +12,7 @@ import (
 )
 
 func TestGrantStoreCodePermissionedChain(t *testing.T) {
-	cli := NewvsldCLI(t, sut, verbose)
+	cli := NewWasmdCLI(t, sut, verbose)
 	// set params to restrict chain
 	const chainAuthorityAddress = "wasm1pvuujjdk0xt043ga0j9nrfh5u8pzj4rpplyqkm"
 	sut.ModifyGenesisJSON(t, SetCodeUploadPermission(t, "AnyOfAddresses", chainAuthorityAddress))

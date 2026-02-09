@@ -112,6 +112,12 @@
       "delegator_starting_infos": [],
       "validator_slash_events": []
     },
+    "crisis": {
+      "constant_fee": {
+        "denom": "ustake",
+        "amount": "1000"
+      }
+    },
     "genutil": {
       "gentxs": [
         {

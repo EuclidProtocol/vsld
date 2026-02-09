@@ -11,8 +11,8 @@ import (
 	"testing"
 	"time"
 
-	wasmvm "github.com/CosmWasm/wasmvm/v3"
-	wasmvmtypes "github.com/CosmWasm/wasmvm/v3/types"
+	wasmvm "github.com/CosmWasm/wasmvm/v2"
+	wasmvmtypes "github.com/CosmWasm/wasmvm/v2/types"
 	abci "github.com/cometbft/cometbft/abci/types"
 	"github.com/cometbft/cometbft/libs/rand"
 	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
@@ -40,9 +40,9 @@ import (
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	distributiontypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 
-	"github.com/EuclidProtocol/vsld/x/wasm/keeper/testdata"
-	"github.com/EuclidProtocol/vsld/x/wasm/keeper/wasmtesting"
-	"github.com/EuclidProtocol/vsld/x/wasm/types"
+	"github.com/CosmWasm/wasmd/x/wasm/keeper/testdata"
+	"github.com/CosmWasm/wasmd/x/wasm/keeper/wasmtesting"
+	"github.com/CosmWasm/wasmd/x/wasm/types"
 )
 
 //go:embed testdata/hackatom.wasm
@@ -53,7 +53,7 @@ var replierWasm []byte
 
 var AvailableCapabilities = []string{
 	"iterator", "staking", "stargate", "cosmwasm_1_1", "cosmwasm_1_2", "cosmwasm_1_3",
-	"cosmwasm_1_4", "cosmwasm_2_0", "cosmwasm_2_1", "cosmwasm_2_2", "ibc2",
+	"cosmwasm_1_4", "cosmwasm_2_0", "cosmwasm_2_1", "cosmwasm_2_2",
 }
 
 func TestNewKeeper(t *testing.T) {
@@ -423,7 +423,7 @@ func TestInstantiate(t *testing.T) {
 
 	gasAfter := ctx.GasMeter().GasConsumed()
 	if types.EnableGasVerification {
-		require.Equal(t, uint64(0x1c473), gasAfter-gasBefore)
+		require.Equal(t, uint64(0x1bcb0), gasAfter-gasBefore)
 	}
 
 	// ensure it is stored properly
@@ -826,7 +826,7 @@ func TestInstantiateWithContractFactoryChildQueriesParent(t *testing.T) {
 	// 	     and the child contracts queries the senders ContractInfo on instantiation
 	//	then the factory contract's ContractInfo should be returned to the child contract
 	//
-	// see also: https://github.com/EuclidProtocol/vsld/issues/896
+	// see also: https://github.com/CosmWasm/wasmd/issues/896
 	ctx, keepers := CreateTestInput(t, false, AvailableCapabilities)
 	keeper := keepers.WasmKeeper
 
@@ -848,7 +848,7 @@ func TestInstantiateWithContractFactoryChildQueriesParent(t *testing.T) {
 	router := baseapp.NewMsgServiceRouter()
 	router.SetInterfaceRegistry(keepers.EncodingConfig.InterfaceRegistry)
 	types.RegisterMsgServer(router, NewMsgServerImpl(keeper))
-	keeper.messenger = NewDefaultMessageHandler(nil, router, nil, nil, nil, keepers.EncodingConfig.Codec, nil)
+	keeper.messenger = NewDefaultMessageHandler(nil, router, nil, nil, nil, nil, keepers.EncodingConfig.Codec, nil)
 	// overwrite wasmvm in response handler
 	keeper.wasmVMResponseHandler = NewDefaultWasmVMContractResponseHandler(NewMessageDispatcher(keeper.messenger, keeper))
 
@@ -890,14 +890,13 @@ func TestInstantiateWithContractFactoryChildQueriesParent(t *testing.T) {
 	}
 
 	// when
-	contractAddress, data, err := keepers.ContractKeeper.Instantiate(ctx, example.CodeID, example.CreatorAddr, nil, nil, "test", nil)
-	ibc2PortID := PortIDForContractV2(contractAddress)
+	parentAddr, data, err := keepers.ContractKeeper.Instantiate(ctx, example.CodeID, example.CreatorAddr, nil, nil, "test", nil)
 
 	// then
 	require.NoError(t, err)
 	assert.Equal(t, []byte("parent"), data)
-	require.Equal(t, contractAddress.String(), capturedSenderAddr)
-	expCodeInfo := fmt.Sprintf(`{"code_id":%d,"creator":%q,"ibc2_port":%q,"pinned":false}`, example.CodeID, example.CreatorAddr.String(), ibc2PortID)
+	require.Equal(t, parentAddr.String(), capturedSenderAddr)
+	expCodeInfo := fmt.Sprintf(`{"code_id":%d,"creator":%q,"pinned":false}`, example.CodeID, example.CreatorAddr.String())
 	assert.JSONEq(t, expCodeInfo, string(capturedCodeInfo))
 }
 
@@ -961,7 +960,7 @@ func TestExecute(t *testing.T) {
 	// make sure gas is properly deducted from ctx
 	gasAfter := ctx.GasMeter().GasConsumed()
 	if types.EnableGasVerification {
-		require.Equal(t, uint64(0x1adb1), gasAfter-gasBefore)
+		require.Equal(t, uint64(0x1ace0), gasAfter-gasBefore)
 	}
 	// ensure bob now exists and got both payments released
 	bobAcct = accKeeper.GetAccount(ctx, bob)

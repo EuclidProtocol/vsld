@@ -24,10 +24,10 @@ func TestUnsafeResetAll(t *testing.T) {
 	//  when `unsafe-reset-all` is executed
 	// 	then the dir and all files in it are removed
 
-	vsldir := filepath.Join(WorkDir, sut.nodePath(0), "wasm")
-	require.NoError(t, os.MkdirAll(vsldir, os.ModePerm))
+	wasmDir := filepath.Join(WorkDir, sut.nodePath(0), "wasm")
+	require.NoError(t, os.MkdirAll(wasmDir, os.ModePerm))
 
-	_, err := os.CreateTemp(vsldir, "testing")
+	_, err := os.CreateTemp(wasmDir, "testing")
 	require.NoError(t, err)
 
 	// when
@@ -35,7 +35,7 @@ func TestUnsafeResetAll(t *testing.T) {
 
 	// then
 	sut.withEachNodeHome(func(i int, home string) {
-		if _, err := os.Stat(vsldir); !os.IsNotExist(err) {
+		if _, err := os.Stat(wasmDir); !os.IsNotExist(err) {
 			t.Fatal("expected wasm dir to be removed")
 		}
 	})
@@ -47,7 +47,7 @@ func TestVestingAccounts(t *testing.T) {
 	//   when: add-genesis-account with vesting flags is executed
 	//   then: the vesting account data is added to the genesis
 	sut.ResetChain(t)
-	cli := NewvsldCLI(t, sut, verbose)
+	cli := NewWasmdCLI(t, sut, verbose)
 	vest1Addr := cli.AddKey("vesting1")
 	vest2Addr := cli.AddKey("vesting2")
 	vest3Addr := cli.AddKey("vesting3")

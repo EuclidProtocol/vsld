@@ -8,11 +8,11 @@ import "cosmwasm/wasm/v1/types.proto";
 import "google/protobuf/any.proto";
 import "amino/amino.proto";
 
-option go_package = "github.com/CosmWasm/vsld/x/wasm/types";
+option go_package = "github.com/CosmWasm/wasmd/x/wasm/types";
 option (gogoproto.goproto_getters_all) = false;
 
 // StoreCodeAuthorization defines authorization for wasm code upload.
-// Since: vsld 0.42
+// Since: wasmd 0.42
 message StoreCodeAuthorization {
   option (amino.name) = "wasm/StoreCodeAuthorization";
   option (cosmos_proto.implements_interface) =
@@ -24,7 +24,7 @@ message StoreCodeAuthorization {
 }
 
 // ContractExecutionAuthorization defines authorization for wasm execute.
-// Since: vsld 0.30
+// Since: wasmd 0.30
 message ContractExecutionAuthorization {
   option (amino.name) = "wasm/ContractExecutionAuthorization";
   option (cosmos_proto.implements_interface) =
@@ -36,7 +36,7 @@ message ContractExecutionAuthorization {
 }
 
 // ContractMigrationAuthorization defines authorization for wasm contract
-// migration. Since: vsld 0.30
+// migration. Since: wasmd 0.30
 message ContractMigrationAuthorization {
   option (amino.name) = "wasm/ContractMigrationAuthorization";
   option (cosmos_proto.implements_interface) =
@@ -60,7 +60,7 @@ message CodeGrant {
 }
 
 // ContractGrant a granted permission for a single contract
-// Since: vsld 0.30
+// Since: wasmd 0.30
 message ContractGrant {
   // Contract is the bech32 address of the smart contract
   string contract = 1 [ (cosmos_proto.scalar) = "cosmos.AddressString" ];
@@ -79,7 +79,7 @@ message ContractGrant {
 }
 
 // MaxCallsLimit limited number of calls to the contract. No funds transferable.
-// Since: vsld 0.30
+// Since: wasmd 0.30
 message MaxCallsLimit {
   option (amino.name) = "wasm/MaxCallsLimit";
   option (cosmos_proto.implements_interface) =
@@ -90,7 +90,7 @@ message MaxCallsLimit {
 }
 
 // MaxFundsLimit defines the maximal amounts that can be sent to the contract.
-// Since: vsld 0.30
+// Since: wasmd 0.30
 message MaxFundsLimit {
   option (amino.name) = "wasm/MaxFundsLimit";
   option (cosmos_proto.implements_interface) =
@@ -107,7 +107,7 @@ message MaxFundsLimit {
 
 // CombinedLimit defines the maximal amounts that can be sent to a contract and
 // the maximal number of calls executable. Both need to remain >0 to be valid.
-// Since: vsld 0.30
+// Since: wasmd 0.30
 message CombinedLimit {
   option (amino.name) = "wasm/CombinedLimit";
   option (cosmos_proto.implements_interface) =
@@ -126,7 +126,7 @@ message CombinedLimit {
 
 // AllowAllMessagesFilter is a wildcard to allow any type of contract payload
 // message.
-// Since: vsld 0.30
+// Since: wasmd 0.30
 message AllowAllMessagesFilter {
   option (amino.name) = "wasm/AllowAllMessagesFilter";
   option (cosmos_proto.implements_interface) =
@@ -135,7 +135,7 @@ message AllowAllMessagesFilter {
 
 // AcceptedMessageKeysFilter accept only the specific contract message keys in
 // the json object to be executed.
-// Since: vsld 0.30
+// Since: wasmd 0.30
 message AcceptedMessageKeysFilter {
   option (amino.name) = "wasm/AcceptedMessageKeysFilter";
   option (cosmos_proto.implements_interface) =
@@ -147,7 +147,7 @@ message AcceptedMessageKeysFilter {
 
 // AcceptedMessagesFilter accept only the specific raw contract messages to be
 // executed.
-// Since: vsld 0.30
+// Since: wasmd 0.30
 message AcceptedMessagesFilter {
   option (amino.name) = "wasm/AcceptedMessagesFilter";
   option (cosmos_proto.implements_interface) =

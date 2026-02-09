@@ -4,7 +4,7 @@ import (
 	"reflect"
 	"testing"
 
-	wasmvm "github.com/CosmWasm/wasmvm/v3"
+	wasmvm "github.com/CosmWasm/wasmvm/v2"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -18,8 +18,8 @@ import (
 	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
 	stakingkeeper "github.com/cosmos/cosmos-sdk/x/staking/keeper"
 
-	"github.com/EuclidProtocol/vsld/x/wasm/keeper/wasmtesting"
-	"github.com/EuclidProtocol/vsld/x/wasm/types"
+	"github.com/CosmWasm/wasmd/x/wasm/keeper/wasmtesting"
+	"github.com/CosmWasm/wasmd/x/wasm/types"
 )
 
 func TestConstructorOptions(t *testing.T) {
@@ -59,9 +59,7 @@ func TestConstructorOptions(t *testing.T) {
 		"message handler": {
 			srcOpt: WithMessageHandler(&wasmtesting.MockMessageHandler{}),
 			verify: func(t *testing.T, k Keeper) {
-				require.IsType(t, callDepthMessageHandler{}, k.messenger)
-				messenger, _ := k.messenger.(callDepthMessageHandler)
-				assert.IsType(t, &wasmtesting.MockMessageHandler{}, messenger.Messenger)
+				assert.IsType(t, &wasmtesting.MockMessageHandler{}, k.messenger)
 			},
 		},
 		"query plugins": {
@@ -72,7 +70,7 @@ func TestConstructorOptions(t *testing.T) {
 		},
 		"message handler decorator": {
 			srcOpt: WithMessageHandlerDecorator(func(old Messenger) Messenger {
-				require.IsType(t, callDepthMessageHandler{}, old)
+				require.IsType(t, &MessageHandlerChain{}, old)
 				return &wasmtesting.MockMessageHandler{}
 			}),
 			verify: func(t *testing.T, k Keeper) {
@@ -139,7 +137,7 @@ func TestConstructorOptions(t *testing.T) {
 			},
 		},
 		"gov propagation": {
-			srcOpt: WithGovSubMsgAuthZPropagated(types.AuthZActionInstantiate, types.AuthZActionMigrateContract),
+			srcOpt: WitGovSubMsgAuthZPropagated(types.AuthZActionInstantiate, types.AuthZActionMigrateContract),
 			verify: func(t *testing.T, k Keeper) {
 				exp := map[types.AuthorizationPolicyAction]struct{}{
 					types.AuthZActionInstantiate:     {},
@@ -155,7 +153,7 @@ func TestConstructorOptions(t *testing.T) {
 			opt := spec.srcOpt
 			_, gotPostOptMarker := opt.(postOptsFn)
 			require.Equal(t, spec.isPostOpt, gotPostOptMarker)
-			k := NewKeeper(codec, runtime.NewKVStoreService(storeKey), authkeeper.AccountKeeper{}, &bankkeeper.BaseKeeper{}, stakingkeeper.Keeper{}, nil, nil, nil, nil, nil, nil, nil, tempDir, types.DefaultNodeConfig(), types.VMConfig{}, AvailableCapabilities, "", nil, spec.srcOpt)
+			k := NewKeeper(codec, runtime.NewKVStoreService(storeKey), authkeeper.AccountKeeper{}, &bankkeeper.BaseKeeper{}, stakingkeeper.Keeper{}, nil, nil, nil, nil, nil, nil, nil, nil, tempDir, types.DefaultNodeConfig(), types.VMConfig{}, AvailableCapabilities, "", spec.srcOpt)
 			spec.verify(t, k)
 		})
 	}

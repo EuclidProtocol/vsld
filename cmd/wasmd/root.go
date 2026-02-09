@@ -10,6 +10,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/config"
+	"github.com/cosmos/cosmos-sdk/crypto/keyring"
 	"github.com/cosmos/cosmos-sdk/server"
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -19,13 +20,13 @@ import (
 	txmodule "github.com/cosmos/cosmos-sdk/x/auth/tx/config"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 
-	"github.com/EuclidProtocol/vsld/app"
-	"github.com/EuclidProtocol/vsld/app/params"
-	wasmkeeper "github.com/EuclidProtocol/vsld/x/wasm/keeper"
-	wasmtypes "github.com/EuclidProtocol/vsld/x/wasm/types"
+	"github.com/CosmWasm/wasmd/app"
+	"github.com/CosmWasm/wasmd/app/params"
+	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
+	wasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
 )
 
-// NewRootCmd creates a new root command for vsld. It is called once in the
+// NewRootCmd creates a new root command for wasmd. It is called once in the
 // main function.
 func NewRootCmd() *cobra.Command {
 	cfg := sdk.GetConfig()
@@ -38,7 +39,7 @@ func NewRootCmd() *cobra.Command {
 	// note, this is not necessary when using app wiring, as depinject can be directly used (see root_v2.go)
 	temp := tempDir()
 	// cleanup temp dir after we are done with the tempApp, so we don't leave behind a
-	// new temporary directory for every invocation. See https://github.com/EuclidProtocol/vsld/issues/2017
+	// new temporary directory for every invocation. See https://github.com/CosmWasm/wasmd/issues/2017
 	defer os.RemoveAll(temp)
 	tempApp := app.NewWasmApp(log.NewNopLogger(), dbm.NewMemDB(), nil, false, simtestutil.NewAppOptionsWithFlagHome(temp), []wasmkeeper.Option{})
 	encodingConfig := params.EncodingConfig{
@@ -56,7 +57,7 @@ func NewRootCmd() *cobra.Command {
 		WithInput(os.Stdin).
 		WithAccountRetriever(authtypes.AccountRetriever{}).
 		WithHomeDir(app.DefaultNodeHome).
-		WithViper("") // In vsld, we don't use any prefix for env variables.
+		WithViper("") // In wasmd, we don't use any prefix for env variables.
 
 	rootCmd := &cobra.Command{
 		Use:           version.AppName,
@@ -114,6 +115,7 @@ func NewRootCmd() *cobra.Command {
 	// add keyring to autocli opts
 	autoCliOpts := tempApp.AutoCliOpts()
 	initClientCtx, _ = config.ReadFromClientConfig(initClientCtx)
+	autoCliOpts.Keyring, _ = keyring.NewAutoCLIKeyring(initClientCtx.Keyring)
 	autoCliOpts.ClientCtx = initClientCtx
 
 	if err := autoCliOpts.EnhanceRootCommand(rootCmd); err != nil {

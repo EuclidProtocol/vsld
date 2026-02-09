@@ -24,7 +24,7 @@ func TestChainUpgrade(t *testing.T) {
 	// when a chain upgrade proposal is executed
 	// then the chain upgrades successfully
 
-	legacyBinary := FetchExecutable(t, "v0.51.0")
+	legacyBinary := FetchExecutable(t, "v0.41.0")
 	t.Logf("+++ legacy binary: %s\n", legacyBinary)
 	currentBranchBinary := sut.ExecBinary
 	sut.ExecBinary = legacyBinary
@@ -34,12 +34,12 @@ func TestChainUpgrade(t *testing.T) {
 
 	const (
 		upgradeHeight int64 = 22
-		upgradeName         = "v0.60"
+		upgradeName         = "v0.50"
 	)
 
 	sut.StartChain(t, fmt.Sprintf("--halt-height=%d", upgradeHeight))
 
-	cli := NewvsldCLI(t, sut, verbose)
+	cli := NewWasmdCLI(t, sut, verbose)
 
 	// set some state to ensure that migrations work
 	verifierAddr := cli.AddKey("verifier")
@@ -79,8 +79,8 @@ func TestChainUpgrade(t *testing.T) {
 	sut.AwaitBlockHeight(t, upgradeHeight-1)
 	t.Logf("current_height: %d\n", sut.currentHeight)
 	raw = cli.CustomQuery("q", "gov", "proposal", proposalID)
-	proposalStatus := gjson.Get(raw, "proposal.status").Int()
-	require.Equal(t, int64(3), proposalStatus, raw)
+	proposalStatus := gjson.Get(raw, "status").String()
+	require.Equal(t, "PROPOSAL_STATUS_PASSED", proposalStatus, raw)
 
 	t.Log("waiting for upgrade info")
 	sut.AwaitUpgradeInfo(t)
@@ -89,7 +89,7 @@ func TestChainUpgrade(t *testing.T) {
 	t.Log("Upgrade height was reached. Upgrading chain")
 	sut.ExecBinary = currentBranchBinary
 	sut.StartChain(t)
-	cli = NewvsldCLI(t, sut, verbose)
+	cli = NewWasmdCLI(t, sut, verbose)
 
 	// ensure that state matches expectations
 	gotRsp = cli.QuerySmart(contractAddr, `{"verifier":{}}`)
@@ -117,7 +117,7 @@ func FetchExecutable(t *testing.T, version string) string {
 	t.Logf("+++ version not in cache, downloading from github")
 
 	// then download from GH releases: only works with Linux currently as we are not publishing OSX binaries
-	const releaseUrl = "https://github.com/EuclidProtocol/vsld/releases/download/%s/vsld-%s-linux-amd64.tar.gz"
+	const releaseUrl = "https://github.com/CosmWasm/wasmd/releases/download/%s/wasmd-%s-linux-amd64.tar.gz"
 	destDir := t.TempDir()
 	rsp, err := http.Get(fmt.Sprintf(releaseUrl, version, version))
 	require.NoError(t, err)

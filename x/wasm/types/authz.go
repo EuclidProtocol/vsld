@@ -5,7 +5,7 @@ import (
 	"context"
 	"strings"
 
-	wasmvm "github.com/CosmWasm/wasmvm/v3"
+	wasmvm "github.com/CosmWasm/wasmvm/v2"
 	"github.com/cosmos/gogoproto/proto"
 
 	errorsmod "cosmossdk.io/errors"
@@ -15,7 +15,7 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	authztypes "github.com/cosmos/cosmos-sdk/x/authz"
 
-	"github.com/EuclidProtocol/vsld/x/wasm/ioutils"
+	"github.com/CosmWasm/wasmd/x/wasm/ioutils"
 )
 
 const (

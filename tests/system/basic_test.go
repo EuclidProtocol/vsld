@@ -22,7 +22,7 @@ func TestBasicWasm(t *testing.T) {
 	sut.ResetChain(t)
 	sut.StartChain(t)
 
-	cli := NewvsldCLI(t, sut, verbose)
+	cli := NewWasmdCLI(t, sut, verbose)
 	t.Log("List keys")
 	t.Log("keys", cli.Keys("keys", "list"))
 
@@ -89,7 +89,7 @@ func TestMultiContract(t *testing.T) {
 	sut.ResetChain(t)
 	sut.StartChain(t)
 
-	cli := NewvsldCLI(t, sut, verbose)
+	cli := NewWasmdCLI(t, sut, verbose)
 
 	bobAddr := randomBech32Addr()
 

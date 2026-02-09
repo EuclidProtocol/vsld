@@ -8,12 +8,12 @@ import (
 	"sync/atomic"
 	"testing"
 
-	wasmvmtypes "github.com/CosmWasm/wasmvm/v3/types"
+	wasmvmtypes "github.com/CosmWasm/wasmvm/v2/types"
 	abci "github.com/cometbft/cometbft/abci/types"
 	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	dbm "github.com/cosmos/cosmos-db"
 	"github.com/cosmos/gogoproto/proto"
-	channeltypes "github.com/cosmos/ibc-go/v10/modules/core/04-channel/types"
+	channeltypes "github.com/cosmos/ibc-go/v8/modules/core/04-channel/types"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"golang.org/x/sync/errgroup"
@@ -31,9 +31,9 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/query"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 
-	"github.com/EuclidProtocol/vsld/x/wasm/keeper"
-	"github.com/EuclidProtocol/vsld/x/wasm/keeper/wasmtesting"
-	"github.com/EuclidProtocol/vsld/x/wasm/types"
+	"github.com/CosmWasm/wasmd/x/wasm/keeper"
+	"github.com/CosmWasm/wasmd/x/wasm/keeper/wasmtesting"
+	"github.com/CosmWasm/wasmd/x/wasm/types"
 )
 
 func TestIBCQuerier(t *testing.T) {
@@ -240,7 +240,6 @@ func TestBankQuerierMetadata(t *testing.T) {
 			{
 				Denom:    "utest",
 				Exponent: 0,
-				Aliases:  []string{},
 			},
 		},
 	}
@@ -270,60 +269,6 @@ func TestBankQuerierMetadata(t *testing.T) {
 			{
 				Denom:    "utest",
 				Exponent: 0,
-				Aliases:  []string{},
-			},
-		},
-	}
-	assert.Equal(t, exp, got.Metadata)
-
-	_, gotErr2 := q(ctx, &wasmvmtypes.BankQuery{
-		DenomMetadata: &wasmvmtypes.DenomMetadataQuery{
-			Denom: "uatom",
-		},
-	})
-	require.Error(t, gotErr2)
-	assert.Contains(t, gotErr2.Error(), "uatom: not found")
-}
-
-func TestBankQuerierMetadataWithNilAliases(t *testing.T) {
-	metadata := banktypes.Metadata{
-		Name: "Test Token",
-		Base: "utest",
-		DenomUnits: []*banktypes.DenomUnit{
-			{
-				Denom:    "utest",
-				Exponent: 0,
-				Aliases:  nil,
-			},
-		},
-	}
-
-	mock := bankKeeperMock{GetDenomMetadataFn: func(ctx context.Context, denom string) (banktypes.Metadata, bool) {
-		if denom == "utest" {
-			return metadata, true
-		} else {
-			return banktypes.Metadata{}, false
-		}
-	}}
-
-	ctx := sdk.Context{}
-	q := keeper.BankQuerier(mock)
-	gotBz, gotErr := q(ctx, &wasmvmtypes.BankQuery{
-		DenomMetadata: &wasmvmtypes.DenomMetadataQuery{
-			Denom: "utest",
-		},
-	})
-	require.NoError(t, gotErr)
-	var got wasmvmtypes.DenomMetadataResponse
-	require.NoError(t, json.Unmarshal(gotBz, &got))
-	exp := wasmvmtypes.DenomMetadata{
-		Name: "Test Token",
-		Base: "utest",
-		DenomUnits: []wasmvmtypes.DenomUnit{
-			{
-				Denom:    "utest",
-				Exponent: 0,
-				Aliases:  []string{},
 			},
 		},
 	}
@@ -347,7 +292,6 @@ func TestBankQuerierAllMetadata(t *testing.T) {
 				{
 					Denom:    "utest",
 					Exponent: 0,
-					Aliases:  []string{},
 				},
 			},
 		},
@@ -377,7 +321,6 @@ func TestBankQuerierAllMetadata(t *testing.T) {
 					{
 						Denom:    "utest",
 						Exponent: 0,
-						Aliases:  []string{},
 					},
 				},
 			},
@@ -710,7 +653,7 @@ func (m bankKeeperMock) DenomsMetadata(ctx context.Context, req *banktypes.Query
 	return m.GetDenomsMetadataFn(ctx, req)
 }
 
-func TestConvertSDKDecCoinTovsldecCoin(t *testing.T) {
+func TestConvertSDKDecCoinToWasmDecCoin(t *testing.T) {
 	specs := map[string]struct {
 		src sdk.DecCoins
 		exp []wasmvmtypes.DecCoin
@@ -741,7 +684,7 @@ func TestConvertSDKDecCoinTovsldecCoin(t *testing.T) {
 	}
 	for name, spec := range specs {
 		t.Run(name, func(t *testing.T) {
-			got := keeper.ConvertSDKDecCoinsTovsldecCoins(spec.src)
+			got := keeper.ConvertSDKDecCoinsToWasmDecCoins(spec.src)
 			assert.Equal(t, spec.exp, got)
 		})
 	}

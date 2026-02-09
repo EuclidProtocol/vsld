@@ -10,11 +10,11 @@ import (
 	"testing"
 	"time"
 
-	wasmvmtypes "github.com/CosmWasm/wasmvm/v3/types"
+	wasmvmtypes "github.com/CosmWasm/wasmvm/v2/types"
 	"github.com/cometbft/cometbft/crypto/ed25519"
 	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	"github.com/cosmos/gogoproto/proto"
-	channeltypes "github.com/cosmos/ibc-go/v10/modules/core/04-channel/types"
+	channeltypes "github.com/cosmos/ibc-go/v8/modules/core/04-channel/types"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
@@ -29,10 +29,11 @@ import (
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 
-	"github.com/EuclidProtocol/vsld/app"
-	wasmKeeper "github.com/EuclidProtocol/vsld/x/wasm/keeper"
-	"github.com/EuclidProtocol/vsld/x/wasm/keeper/testdata"
-	"github.com/EuclidProtocol/vsld/x/wasm/types"
+	"github.com/CosmWasm/wasmd/app"
+	"github.com/CosmWasm/wasmd/x/wasm/keeper"
+	wasmKeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
+	"github.com/CosmWasm/wasmd/x/wasm/keeper/testdata"
+	"github.com/CosmWasm/wasmd/x/wasm/types"
 )
 
 func TestMaskReflectCustomQuery(t *testing.T) {
@@ -708,7 +709,7 @@ func TestDistributionQuery(t *testing.T) {
 
 func TestIBCListChannelsQuery(t *testing.T) {
 	cdc := wasmKeeper.MakeEncodingConfig(t).Codec
-	pCtx, keepers := wasmKeeper.CreateTestInput(t, false, ReflectCapabilities, wasmKeeper.WithMessageEncoders(reflectEncoders(cdc)), wasmKeeper.WithQueryPlugins(reflectPlugins()))
+	pCtx, keepers := keeper.CreateTestInput(t, false, ReflectCapabilities, keeper.WithMessageEncoders(reflectEncoders(cdc)), keeper.WithQueryPlugins(reflectPlugins()))
 	keeper := keepers.WasmKeeper
 	nonIbcExample := wasmKeeper.InstantiateReflectExampleContract(t, pCtx, keepers)
 	// add an ibc port for testing

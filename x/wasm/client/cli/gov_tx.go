@@ -8,7 +8,7 @@ import (
 	"strconv"
 	"strings"
 
-	wasmvm "github.com/CosmWasm/wasmvm/v3"
+	wasmvm "github.com/CosmWasm/wasmvm/v2"
 	"github.com/distribution/reference"
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
@@ -23,8 +23,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/gov/client/cli"
 	v1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
 
-	"github.com/EuclidProtocol/vsld/x/wasm/ioutils"
-	"github.com/EuclidProtocol/vsld/x/wasm/types"
+	"github.com/CosmWasm/wasmd/x/wasm/ioutils"
+	"github.com/CosmWasm/wasmd/x/wasm/types"
 )
 
 // DefaultGovAuthority is set to the gov module address.
@@ -114,19 +114,19 @@ func parseVerificationFlags(gzippedWasm []byte, flags *flag.FlagSet) (string, st
 	// if any set require others to be set
 	if len(source) != 0 || len(builder) != 0 || len(codeHash) != 0 {
 		if source == "" {
-			return "", "", nil, errors.New("source is required")
+			return "", "", nil, fmt.Errorf("source is required")
 		}
 		if _, err = url.ParseRequestURI(source); err != nil {
 			return "", "", nil, fmt.Errorf("source: %s", err)
 		}
 		if builder == "" {
-			return "", "", nil, errors.New("builder is required")
+			return "", "", nil, fmt.Errorf("builder is required")
 		}
 		if _, err := reference.ParseDockerRef(builder); err != nil {
 			return "", "", nil, fmt.Errorf("builder: %s", err)
 		}
 		if len(codeHash) == 0 {
-			return "", "", nil, errors.New("code hash is required")
+			return "", "", nil, fmt.Errorf("code hash is required")
 		}
 		// wasm is gzipped in parseStoreCodeArgs
 		// checksum generation will be decoupled here
@@ -319,10 +319,10 @@ func ProposalStoreAndInstantiateContractCmd() *cobra.Command {
 
 			// ensure sensible admin is set (or explicitly immutable)
 			if adminStr == "" && !noAdmin {
-				return errors.New("you must set an admin or explicitly pass --no-admin to make it immutable (vsld issue #719)")
+				return fmt.Errorf("you must set an admin or explicitly pass --no-admin to make it immutable (wasmd issue #719)")
 			}
 			if adminStr != "" && noAdmin {
-				return errors.New("you set an admin and passed --no-admin, those cannot both be true")
+				return fmt.Errorf("you set an admin and passed --no-admin, those cannot both be true")
 			}
 
 			if adminStr != "" {

@@ -5,7 +5,7 @@ import (
 	"os"
 	"testing"
 
-	wasmvmtypes "github.com/CosmWasm/wasmvm/v3/types"
+	wasmvmtypes "github.com/CosmWasm/wasmvm/v2/types"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
@@ -20,8 +20,8 @@ import (
 	stakingkeeper "github.com/cosmos/cosmos-sdk/x/staking/keeper"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 
-	"github.com/EuclidProtocol/vsld/x/wasm/keeper/testdata"
-	wasmtypes "github.com/EuclidProtocol/vsld/x/wasm/types"
+	"github.com/CosmWasm/wasmd/x/wasm/keeper/testdata"
+	wasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
 )
 
 type StakingInitMsg struct {

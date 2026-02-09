@@ -1,5 +1,5 @@
 name: Proto Buf Publishing - Action
-# Protobuf runs buf (https://buf.build/) push updated proto files to https://buf.build/EuclidProtocol/vsld
+# Protobuf runs buf (https://buf.build/) push updated proto files to https://buf.build/cosmwasm/wasmd
 # This workflow is only run when a .proto file has been changed
 on:
   push:
@@ -16,7 +16,7 @@ jobs:
   push:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - uses: bufbuild/buf-setup-action@v1.47.2
 
       # lint checks
@@ -29,7 +29,7 @@ jobs:
       #- uses: bufbuild/buf-breaking-action@v1
       #  with:
       #    input: 'proto'
-      #    against: 'https://github.com/EuclidProtocol/vsld.git#branch=master'
+      #    against: 'https://github.com/CosmWasm/wasmd.git#branch=master'
 
       # publish proto files
       - uses: bufbuild/buf-push-action@v1

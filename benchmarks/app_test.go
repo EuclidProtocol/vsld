@@ -16,7 +16,6 @@ import (
 	"cosmossdk.io/log"
 	sdkmath "cosmossdk.io/math"
 
-	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"
@@ -29,17 +28,14 @@ import (
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 
-	"github.com/EuclidProtocol/vsld/app"
-	wasmtypes "github.com/EuclidProtocol/vsld/x/wasm/types"
+	"github.com/CosmWasm/wasmd/app"
+	wasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
 )
 
 func setup(db dbm.DB, withGenesis bool) (*app.WasmApp, app.GenesisState) {
 	logLevel := log.LevelOption(zerolog.InfoLevel)
 
-	// Disable prunning for testing purposes to prevent dangling background
-	// goroutines left between test scenarios
-	disablePrunning := baseapp.SetIAVLSyncPruning(true)
-	wasmApp := app.NewWasmApp(log.NewLogger(os.Stdout, logLevel), db, nil, true, simtestutil.EmptyAppOptions{}, nil, disablePrunning)
+	wasmApp := app.NewWasmApp(log.NewLogger(os.Stdout, logLevel), db, nil, true, simtestutil.EmptyAppOptions{}, nil)
 
 	if withGenesis {
 		return wasmApp, wasmApp.DefaultGenesis()

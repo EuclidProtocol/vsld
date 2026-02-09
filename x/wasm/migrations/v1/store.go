@@ -5,13 +5,13 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/EuclidProtocol/vsld/x/wasm/types"
+	"github.com/CosmWasm/wasmd/x/wasm/types"
 )
 
 // AddToSecondIndexFn creates a secondary index entry for the creator of the contract
 type AddToSecondIndexFn func(ctx context.Context, creatorAddress sdk.AccAddress, position *types.AbsoluteTxPosition, contractAddress sdk.AccAddress) error
 
-// wasmKeeper abstract keeper
+// Keeper abstract keeper
 type wasmKeeper interface {
 	IterateContractInfo(ctx context.Context, cb func(sdk.AccAddress, types.ContractInfo) bool)
 }

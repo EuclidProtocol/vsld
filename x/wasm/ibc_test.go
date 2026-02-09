@@ -3,21 +3,21 @@ package wasm
 import (
 	"testing"
 
-	wasmvmtypes "github.com/CosmWasm/wasmvm/v3/types"
+	wasmvmtypes "github.com/CosmWasm/wasmvm/v2/types"
 	abci "github.com/cometbft/cometbft/abci/types"
 	"github.com/cometbft/cometbft/libs/rand"
-	clienttypes "github.com/cosmos/ibc-go/v10/modules/core/02-client/types" //nolint:staticcheck
-	channeltypes "github.com/cosmos/ibc-go/v10/modules/core/04-channel/types"
-	ibcexported "github.com/cosmos/ibc-go/v10/modules/core/exported"
+	clienttypes "github.com/cosmos/ibc-go/v8/modules/core/02-client/types" //nolint:staticcheck
+	channeltypes "github.com/cosmos/ibc-go/v8/modules/core/04-channel/types"
+	ibcexported "github.com/cosmos/ibc-go/v8/modules/core/exported"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/address"
 
-	"github.com/EuclidProtocol/vsld/x/wasm/keeper"
-	"github.com/EuclidProtocol/vsld/x/wasm/keeper/wasmtesting"
-	"github.com/EuclidProtocol/vsld/x/wasm/types"
+	"github.com/CosmWasm/wasmd/x/wasm/keeper"
+	"github.com/CosmWasm/wasmd/x/wasm/keeper/wasmtesting"
+	"github.com/CosmWasm/wasmd/x/wasm/types"
 )
 
 func TestOnRecvPacket(t *testing.T) {
@@ -109,17 +109,16 @@ func TestOnRecvPacket(t *testing.T) {
 					return spec.contractRsp, spec.contractOkMsgExecErr
 				},
 			}
-			channelVersion := ""
 			h := NewIBCHandler(&mock, nil, nil)
 			em := &sdk.EventManager{}
 			ctx := sdk.Context{}.WithEventManager(em)
 			if spec.expPanic {
 				require.Panics(t, func() {
-					_ = h.OnRecvPacket(ctx, channelVersion, spec.ibcPkg, anyRelayerAddr)
+					_ = h.OnRecvPacket(ctx, spec.ibcPkg, anyRelayerAddr)
 				})
 				return
 			}
-			gotAck := h.OnRecvPacket(ctx, channelVersion, spec.ibcPkg, anyRelayerAddr)
+			gotAck := h.OnRecvPacket(ctx, spec.ibcPkg, anyRelayerAddr)
 			assert.Equal(t, spec.expAck, gotAck)
 			assert.Equal(t, spec.expEvents, em.Events())
 		})

@@ -7,11 +7,11 @@ import (
 	abci "github.com/cometbft/cometbft/abci/types"
 	"github.com/cometbft/cometbft/libs/rand"
 	"github.com/cosmos/gogoproto/proto"
-	icacontrollertypes "github.com/cosmos/ibc-go/v10/modules/apps/27-interchain-accounts/controller/types"
-	hosttypes "github.com/cosmos/ibc-go/v10/modules/apps/27-interchain-accounts/host/types"
-	icatypes "github.com/cosmos/ibc-go/v10/modules/apps/27-interchain-accounts/types"
-	channeltypes "github.com/cosmos/ibc-go/v10/modules/core/04-channel/types"
-	ibctesting "github.com/cosmos/ibc-go/v10/testing"
+	icacontrollertypes "github.com/cosmos/ibc-go/v8/modules/apps/27-interchain-accounts/controller/types"
+	hosttypes "github.com/cosmos/ibc-go/v8/modules/apps/27-interchain-accounts/host/types"
+	icatypes "github.com/cosmos/ibc-go/v8/modules/apps/27-interchain-accounts/types"
+	channeltypes "github.com/cosmos/ibc-go/v8/modules/core/04-channel/types"
+	ibctesting "github.com/cosmos/ibc-go/v8/testing"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
@@ -22,7 +22,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/address"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 
-	wasmibctesting "github.com/EuclidProtocol/vsld/tests/wasmibctesting"
+	"github.com/CosmWasm/wasmd/app"
+	wasmibctesting "github.com/CosmWasm/wasmd/tests/ibctesting"
 )
 
 func TestICA(t *testing.T) {
@@ -33,15 +34,15 @@ func TestICA(t *testing.T) {
 	// then the ICA owner can submit a message via IBC
 	//      to control their account on the host chain
 	coord := wasmibctesting.NewCoordinator(t, 2)
-	hostChain := wasmibctesting.NewWasmTestChain(coord.GetChain(ibctesting.GetChainID(1)))
+	hostChain := coord.GetChain(ibctesting.GetChainID(1))
 	hostParams := hosttypes.NewParams(true, []string{sdk.MsgTypeURL(&banktypes.MsgSend{})})
-	hostApp := hostChain.GetWasmApp()
+	hostApp := hostChain.App.(*app.WasmApp)
 	hostApp.ICAHostKeeper.SetParams(hostChain.GetContext(), hostParams)
 
-	controllerChain := wasmibctesting.NewWasmTestChain(coord.GetChain(ibctesting.GetChainID(2)))
+	controllerChain := coord.GetChain(ibctesting.GetChainID(2))
 
-	path := wasmibctesting.NewWasmPath(controllerChain, hostChain)
-	coord.SetupConnections(&path.Path)
+	path := wasmibctesting.NewPath(controllerChain, hostChain)
+	coord.SetupConnections(path)
 
 	specs := map[string]struct {
 		icaVersion string
@@ -68,7 +69,7 @@ func TestICA(t *testing.T) {
 			icaControllerAddr := sdk.AccAddress(icaControllerKey.PubKey().Address().Bytes())
 			controllerChain.Fund(icaControllerAddr, sdkmath.NewInt(1_000))
 
-			msg := icacontrollertypes.NewMsgRegisterInterchainAccount(path.EndpointA.ConnectionID, icaControllerAddr.String(), spec.icaVersion, channeltypes.UNORDERED)
+			msg := icacontrollertypes.NewMsgRegisterInterchainAccount(path.EndpointA.ConnectionID, icaControllerAddr.String(), spec.icaVersion)
 			res, err := controllerChain.SendNonDefaultSenderMsgs(icaControllerKey, msg)
 			require.NoError(t, err)
 			chanID, portID, version := parseIBCChannelEvents(t, res)
@@ -86,10 +87,10 @@ func TestICA(t *testing.T) {
 				Version: icatypes.Version,
 				Order:   channeltypes.ORDERED,
 			}
-			coord.CreateChannels(&path.Path)
+			coord.CreateChannels(path)
 
 			// assert ICA exists on controller
-			contApp := controllerChain.GetWasmApp()
+			contApp := controllerChain.App.(*app.WasmApp)
 			icaRsp, err := contApp.ICAControllerKeeper.InterchainAccount(controllerChain.GetContext(), &icacontrollertypes.QueryInterchainAccountRequest{
 				Owner:        icaControllerAddr.String(),
 				ConnectionId: path.EndpointA.ConnectionID,
@@ -114,7 +115,8 @@ func TestICA(t *testing.T) {
 			_, err = controllerChain.SendNonDefaultSenderMsgs(icaControllerKey, msgSendTx)
 			require.NoError(t, err)
 
-			wasmibctesting.RelayAndAckPendingPackets(path)
+			assert.Equal(t, 1, len(controllerChain.PendingSendPackets))
+			require.NoError(t, coord.RelayAndAckPendingPackets(path))
 
 			gotBalance := hostChain.Balance(targetAddr, sdk.DefaultBondDenom)
 			assert.Equal(t, sendCoin.String(), gotBalance.String())

@@ -7,7 +7,7 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/EuclidProtocol/vsld/x/wasm/types"
+	"github.com/CosmWasm/wasmd/x/wasm/types"
 )
 
 func TestDefaultAuthzPolicyCanCreateCode(t *testing.T) {
@@ -40,7 +40,7 @@ func TestDefaultAuthzPolicyCanCreateCode(t *testing.T) {
 			contractInstConf: types.AllowEverybody,
 			exp:              false,
 		},
-		"contract config - subtype": {
+		"contract config -  subtype": {
 			chainConfigs:     types.NewChainAccessConfigs(types.AllowEverybody, types.AllowEverybody),
 			contractInstConf: types.AccessTypeAnyOfAddresses.With(myActorAddress),
 			exp:              true,
@@ -213,7 +213,7 @@ func TestGovAuthzPolicyCanCreateCode(t *testing.T) {
 			chainConfigs:     types.NewChainAccessConfigs(types.AccessTypeAnyOfAddresses.With(otherAddress), types.AllowEverybody),
 			contractInstConf: types.AllowEverybody,
 		},
-		"contract config - subtype": {
+		"contract config -  subtype": {
 			chainConfigs:     types.NewChainAccessConfigs(types.AllowEverybody, types.AllowEverybody),
 			contractInstConf: types.AccessTypeAnyOfAddresses.With(myActorAddress),
 		},

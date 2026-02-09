@@ -1,7 +1,7 @@
-# docker build . -t cosmwasm/vsld:latest
-# docker run --rm -it cosmwasm/vsld:latest /bin/sh
+# docker build . -t cosmwasm/wasmd:latest
+# docker run --rm -it cosmwasm/wasmd:latest /bin/sh
 
-FROM golang:1.23.6-alpine AS go-builder
+FROM golang:1.23-alpine3.19 AS go-builder
 
 # this comes from standard alpine nightly file
 #  https://github.com/rust-lang/docker-rust-nightly/blob/master/alpine3.12/Dockerfile
@@ -15,20 +15,20 @@ RUN apk add git
 WORKDIR /code
 COPY . /code/
 # See https://github.com/CosmWasm/wasmvm/releases
-ADD https://github.com/CosmWasm/wasmvm/releases/download/v3.0.0-ibc2.1/libwasmvm_muslc.aarch64.a /lib/libwasmvm_muslc.aarch64.a
-ADD https://github.com/CosmWasm/wasmvm/releases/download/v3.0.0-ibc2.1/libwasmvm_muslc.x86_64.a /lib/libwasmvm_muslc.x86_64.a
-RUN sha256sum /lib/libwasmvm_muslc.aarch64.a | grep 7e61b5669dd2dac224605c055a59c1c23c52df98d7ab1a1cacac232ad8bb7f87
-RUN sha256sum /lib/libwasmvm_muslc.x86_64.a | grep fcf85a9f4982fc496e75a84b01e6a4c46eebb8e39d5cd34a2d7c3faf3029b3cb
+ADD https://github.com/CosmWasm/wasmvm/releases/download/v2.2.5/libwasmvm_muslc.aarch64.a /lib/libwasmvm_muslc.aarch64.a
+ADD https://github.com/CosmWasm/wasmvm/releases/download/v2.2.5/libwasmvm_muslc.x86_64.a /lib/libwasmvm_muslc.x86_64.a
+RUN sha256sum /lib/libwasmvm_muslc.aarch64.a | grep 1526d57615e384e604d9d0bfd68ec03e36c20b2ee114048ea514754dc73f2ceb
+RUN sha256sum /lib/libwasmvm_muslc.x86_64.a | grep 360e0670a2e69d4b422e0e12c07c5044d6125ffe46e011dfd9b70f89a40f092a
 
 # force it to use static lib (from above) not standard libgo_cosmwasm.so file
 RUN LEDGER_ENABLED=false BUILD_TAGS=muslc LINK_STATICALLY=true make build
 RUN echo "Ensuring binary is statically linked ..." \
-  && (file /code/build/vsld | grep "statically linked")
+  && (file /code/build/wasmd | grep "statically linked")
 
 # --------------------------------------------------------
 FROM alpine:3.18
 
-COPY --from=go-builder /code/build/vsld /usr/bin/vsld
+COPY --from=go-builder /code/build/wasmd /usr/bin/wasmd
 
 COPY docker/* /opt/
 RUN chmod +x /opt/*.sh
@@ -42,4 +42,4 @@ EXPOSE 26656
 # tendermint rpc
 EXPOSE 26657
 
-CMD ["/usr/bin/vsld", "version"]
+CMD ["/usr/bin/wasmd", "version"]

@@ -1,7 +1,6 @@
 package types
 
 import (
-	"errors"
 	"fmt"
 	"net/url"
 	"strings"
@@ -81,19 +80,19 @@ func ValidateVerificationInfo(source, builder string, codeHash []byte) error {
 	// if any set require others to be set
 	if len(source) != 0 || len(builder) != 0 || len(codeHash) != 0 {
 		if source == "" {
-			return errors.New("source is required")
+			return fmt.Errorf("source is required")
 		}
 		if _, err := url.ParseRequestURI(source); err != nil {
 			return fmt.Errorf("source: %s", err)
 		}
 		if builder == "" {
-			return errors.New("builder is required")
+			return fmt.Errorf("builder is required")
 		}
 		if _, err := reference.ParseDockerRef(builder); err != nil {
 			return fmt.Errorf("builder: %s", err)
 		}
 		if codeHash == nil {
-			return errors.New("code hash is required")
+			return fmt.Errorf("code hash is required")
 		}
 		// code hash checksum match validation is done in the keeper, ungzipping consumes gas
 	}
