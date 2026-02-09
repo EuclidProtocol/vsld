@@ -28,7 +28,7 @@ RUN echo "Ensuring binary is statically linked ..." \
 # --------------------------------------------------------
 FROM alpine:3.18
 
-COPY --from=go-builder /code/build/wasmd /usr/bin/wasmd
+COPY --from=go-builder /code/build/wasmd /usr/bin/lumend
 
 COPY docker/* /opt/
 RUN chmod +x /opt/*.sh
@@ -42,4 +42,4 @@ EXPOSE 26656
 # tendermint rpc
 EXPOSE 26657
 
-CMD ["/usr/bin/wasmd", "version"]
+CMD ["/usr/bin/lumend", "version"]
