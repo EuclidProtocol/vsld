@@ -78,14 +78,14 @@ all: install lint test
 
 build: go.sum
 ifeq ($(OS),Windows_NT)
-	$(error wasmd server not supported. Use "make build-windows-client" for client)
+	$(error lumend server not supported. Use "make build-windows-client" for client)
 	exit 1
 else
-	go build -mod=readonly $(BUILD_FLAGS) -o build/wasmd ./cmd/wasmd
+	go build -mod=readonly $(BUILD_FLAGS) -o build/lumend ./cmd/wasmd
 endif
 
 build-windows-client: go.sum
-	GOOS=windows GOARCH=amd64 go build -mod=readonly $(BUILD_FLAGS) -o build/wasmd.exe ./cmd/wasmd
+	GOOS=windows GOARCH=amd64 go build -mod=readonly $(BUILD_FLAGS) -o build/lumend.exe ./cmd/wasmd
 
 install: go.sum
 	go install -mod=readonly $(BUILD_FLAGS) ./cmd/wasmd
