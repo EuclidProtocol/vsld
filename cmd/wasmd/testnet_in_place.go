@@ -107,8 +107,11 @@ func newTestnetApp(
 }
 
 // modifyAppState performs Gaia-style application-state modifications for the in-place testnet.
+// All modifications are performed in a cached context and only written through on success,
+// ensuring the state is not left partially modified if any step fails.
 func modifyAppState(wasmApp *app.WasmApp, args testnetArgs) error {
-	ctx := wasmApp.NewUncachedContext(true, tmproto.Header{})
+	uncachedCtx := wasmApp.NewUncachedContext(true, tmproto.Header{})
+	ctx, writeFn := uncachedCtx.CacheContext()
 
 	// Convert CometBFT pubkey to SDK pubkey
 	sdkPubKey, err := cryptocodec.FromCmtPubKeyInterface(args.userPubKey)
@@ -132,10 +135,10 @@ func modifyAppState(wasmApp *app.WasmApp, args testnetArgs) error {
 		return fmt.Errorf("failed to get bond denom: %w", err)
 	}
 
-	if err := modifyStaking(ctx, wasmApp, newOpAddr, delegatorAddr, sdkPubKey); err != nil {
+	if err := modifyStaking(ctx, wasmApp, newOpAddr, delegatorAddr, sdkPubKey, bondDenom); err != nil {
 		return err
 	}
-	if err := modifyDistribution(ctx, wasmApp, newOpAddr); err != nil {
+	if err := modifyDistribution(ctx, wasmApp, newOpAddr, delegatorAddr); err != nil {
 		return err
 	}
 	if err := modifySlashing(ctx, wasmApp, newConsAddr); err != nil {
@@ -150,21 +153,26 @@ func modifyAppState(wasmApp *app.WasmApp, args testnetArgs) error {
 		}
 	}
 	if args.upgradeHeight > 0 && args.upgradeName != "" {
-		if err := scheduleUpgrade(ctx, wasmApp, args.upgradeName, args.upgradeHeight); err != nil {
+		lastHeight := wasmApp.LastBlockHeight()
+		if err := scheduleUpgrade(ctx, wasmApp, args.upgradeName, lastHeight+args.upgradeHeight); err != nil {
 			return err
 		}
 	}
 
+	// All modifications succeeded — commit to the underlying store
+	writeFn()
 	return nil
 }
 
 // modifyStaking removes old validator powers and creates the new testnet validator.
+// It also reconciles the bonded pool balance and sets last total power.
 func modifyStaking(
 	ctx sdk.Context,
 	wasmApp *app.WasmApp,
 	newOpAddr sdk.ValAddress,
 	delegatorAddr sdk.AccAddress,
 	sdkPubKey cryptotypes.PubKey,
+	bondDenom string,
 ) error {
 	// Remove last validator power and power index for all existing validators
 	allVals, err := wasmApp.StakingKeeper.GetAllValidators(ctx)
@@ -223,11 +231,30 @@ func modifyStaking(
 		return fmt.Errorf("failed to set delegation: %w", err)
 	}
 
+	// Set last total power to match the new validator
+	if err := wasmApp.StakingKeeper.SetLastTotalPower(ctx, math.NewInt(testnetValidatorPower)); err != nil {
+		return fmt.Errorf("failed to set last total power: %w", err)
+	}
+
+	// Reconcile bonded pool balance: mint tokens so bonded pool holds what the validator claims
+	bondedPool := wasmApp.StakingKeeper.GetBondedPool(ctx)
+	bondedBalance := wasmApp.BankKeeper.GetBalance(ctx, bondedPool.GetAddress(), bondDenom)
+	delta := validatorTokens.Sub(bondedBalance.Amount)
+	if delta.IsPositive() {
+		bondedCoins := sdk.NewCoins(sdk.NewCoin(bondDenom, delta))
+		if err := wasmApp.BankKeeper.MintCoins(ctx, minttypes.ModuleName, bondedCoins); err != nil {
+			return fmt.Errorf("failed to mint bonded pool coins: %w", err)
+		}
+		if err := wasmApp.BankKeeper.SendCoinsFromModuleToModule(ctx, minttypes.ModuleName, stakingtypes.BondedPoolName, bondedCoins); err != nil {
+			return fmt.Errorf("failed to fund bonded pool: %w", err)
+		}
+	}
+
 	return nil
 }
 
-// modifyDistribution initializes distribution state for the new validator.
-func modifyDistribution(ctx sdk.Context, wasmApp *app.WasmApp, newOpAddr sdk.ValAddress) error {
+// modifyDistribution initializes distribution state for the new validator and its self-delegation.
+func modifyDistribution(ctx sdk.Context, wasmApp *app.WasmApp, newOpAddr sdk.ValAddress, delegatorAddr sdk.AccAddress) error {
 	if err := wasmApp.DistrKeeper.SetValidatorHistoricalRewards(ctx, newOpAddr, 0, distrtypes.NewValidatorHistoricalRewards(sdk.DecCoins{}, 1)); err != nil {
 		return fmt.Errorf("failed to set historical rewards: %w", err)
 	}
@@ -239,6 +266,10 @@ func modifyDistribution(ctx sdk.Context, wasmApp *app.WasmApp, newOpAddr sdk.Val
 	}
 	if err := wasmApp.DistrKeeper.SetValidatorOutstandingRewards(ctx, newOpAddr, distrtypes.ValidatorOutstandingRewards{Rewards: sdk.DecCoins{}}); err != nil {
 		return fmt.Errorf("failed to set outstanding rewards: %w", err)
+	}
+	// Set delegator starting info so reward withdrawal works for the self-delegation
+	if err := wasmApp.DistrKeeper.SetDelegatorStartingInfo(ctx, newOpAddr, delegatorAddr, distrtypes.NewDelegatorStartingInfo(1, math.LegacyOneDec(), 0)); err != nil {
+		return fmt.Errorf("failed to set delegator starting info: %w", err)
 	}
 	return nil
 }
@@ -310,11 +341,11 @@ func fundAccounts(ctx sdk.Context, wasmApp *app.WasmApp, accountsToFund, coinsTo
 	return nil
 }
 
-// scheduleUpgrade schedules a software upgrade at the given height offset.
-func scheduleUpgrade(ctx sdk.Context, wasmApp *app.WasmApp, name string, heightOffset int64) error {
+// scheduleUpgrade schedules a software upgrade at the given absolute height.
+func scheduleUpgrade(ctx sdk.Context, wasmApp *app.WasmApp, name string, height int64) error {
 	plan := upgradetypes.Plan{
 		Name:   name,
-		Height: ctx.BlockHeight() + heightOffset,
+		Height: height,
 	}
 	if err := wasmApp.UpgradeKeeper.ScheduleUpgrade(ctx, plan); err != nil {
 		return fmt.Errorf("failed to schedule upgrade %q: %w", name, err)
