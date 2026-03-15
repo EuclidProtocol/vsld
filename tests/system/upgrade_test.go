@@ -60,7 +60,7 @@ func TestChainUpgrade(t *testing.T) {
  "messages": [
   {
    "@type": "/cosmos.upgrade.v1beta1.MsgSoftwareUpgrade",
-   "authority": "wasm10d07y265gmmuvt4z0w9aw880jnsr700js7zslc",
+   "authority": "euclid10d07y265gmmuvt4z0w9aw880jnsr700jt5uad5",
    "plan": {
     "name": %q,
     "height": "%d"
