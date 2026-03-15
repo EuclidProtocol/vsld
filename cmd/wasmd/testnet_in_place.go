@@ -27,6 +27,7 @@ import (
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 
 	"github.com/CosmWasm/wasmd/app"
+	wasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
 )
 
 const (
@@ -145,6 +146,9 @@ func modifyAppState(wasmApp *app.WasmApp, args testnetArgs) error {
 		return err
 	}
 	if err := modifyGovernance(ctx, wasmApp); err != nil {
+		return err
+	}
+	if err := modifyWasmPermissions(ctx, wasmApp); err != nil {
 		return err
 	}
 	if args.accountsToFund != "" {
@@ -338,6 +342,17 @@ func fundAccounts(ctx sdk.Context, wasmApp *app.WasmApp, accountsToFund, coinsTo
 		}
 	}
 
+	return nil
+}
+
+// modifyWasmPermissions sets CosmWasm upload and instantiate permissions to permissionless.
+func modifyWasmPermissions(ctx sdk.Context, wasmApp *app.WasmApp) error {
+	wasmParams := wasmApp.WasmKeeper.GetParams(ctx)
+	wasmParams.CodeUploadAccess = wasmtypes.AllowEverybody
+	wasmParams.InstantiateDefaultPermission = wasmtypes.AccessTypeEverybody
+	if err := wasmApp.WasmKeeper.SetParams(ctx, wasmParams); err != nil {
+		return fmt.Errorf("failed to set wasm params: %w", err)
+	}
 	return nil
 }
 
