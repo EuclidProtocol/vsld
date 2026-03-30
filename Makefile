@@ -211,7 +211,23 @@ localnet-setup:
 	sed -i.bak 's/^db_backend = "goleveldb"/db_backend = "pebbledb"/' $(LUMEND_HOME)/config/config.toml && rm -f $(LUMEND_HOME)/config/config.toml.bak
 	@echo "==> Downloading and extracting snapshot (this may take a while)..."
 	curl -L $(SNAPSHOT_URL) | lz4 -dc | tar -C $(LUMEND_HOME)/ -xf -
-	@echo "==> Local testnet setup complete. Run: make localnet-start"
+	@echo "==> Local testnet setup complete."
+	@echo ""
+	@echo "Quick start:"
+	@echo "    make localnet-start"
+	@echo ""
+	@echo "Or run manually:"
+	@VAL_ACCOUNT=$$(lumend keys show validator -a --keyring-backend test --home=$(LUMEND_HOME) 2>/dev/null) && \
+	VAL_OPERATOR=$$(lumend keys show validator --bech val -a --keyring-backend test --home=$(LUMEND_HOME) 2>/dev/null) && \
+	PRIV_KEY=$$(python3 -c "import json; print(json.load(open('$(LUMEND_HOME)/config/priv_validator_key.json'))['priv_key']['value'])" 2>/dev/null) && \
+	PUB_KEY=$$(python3 -c "import json; print(json.load(open('$(LUMEND_HOME)/config/priv_validator_key.json'))['pub_key']['value'])" 2>/dev/null) && \
+	echo "    lumend in-place-testnet $(CHAIN_ID) \\" && \
+	echo "      --validator-operator=$$VAL_OPERATOR \\" && \
+	echo "      --validator-pubkey=$$PUB_KEY \\" && \
+	echo "      --validator-privkey=$$PRIV_KEY \\" && \
+	echo "      --accounts-to-fund=$$VAL_ACCOUNT \\" && \
+	echo "      --cosmwasm-admin=$$VAL_ACCOUNT \\" && \
+	echo "      --home $(LUMEND_HOME)"
 
 localnet-start:
 	@VAL_ACCOUNT=$$(lumend keys show validator -a --keyring-backend test --home=$(LUMEND_HOME) 2>/dev/null) && \
