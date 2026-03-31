@@ -14,7 +14,7 @@ import (
 func TestGrantStoreCodePermissionedChain(t *testing.T) {
 	cli := NewWasmdCLI(t, sut, verbose)
 	// set params to restrict chain
-	const chainAuthorityAddress = "wasm1pvuujjdk0xt043ga0j9nrfh5u8pzj4rpplyqkm"
+	const chainAuthorityAddress = "euclid1pvuujjdk0xt043ga0j9nrfh5u8pzj4rp646dyh"
 	sut.ModifyGenesisJSON(t, SetCodeUploadPermission(t, "AnyOfAddresses", chainAuthorityAddress))
 
 	recoveredAddress := cli.AddKeyFromSeed("chain_authority", "aisle ship absurd wedding arch admit fringe foam cluster tide trim aisle salad shiver tackle palm glance wrist valley hamster couch crystal frozen chronic")

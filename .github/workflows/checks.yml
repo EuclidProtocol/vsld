@@ -195,7 +195,7 @@ jobs:
       - name: Check wasmvm version
         run: |
           SHA=${{ github.sha }}
-          IN_DOCKER=$(docker run --rm $IMAGE_NAME:$SHA /usr/bin/wasmd query wasm libwasmvm-version)
+          IN_DOCKER=$(docker run --rm $IMAGE_NAME:$SHA /usr/bin/lumend query wasm libwasmvm-version)
           echo "Runtime libwasmvm-version in docker: $IN_DOCKER"
           IN_GOMOD=$(go list -m github.com/CosmWasm/wasmvm/v2 | cut -d" " -f2 | cut -d"v" -f2)
           echo "wasmvm version in go.mod: $IN_GOMOD"

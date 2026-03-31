@@ -88,7 +88,7 @@ build-windows-client: go.sum
 	GOOS=windows GOARCH=amd64 go build -mod=readonly $(BUILD_FLAGS) -o build/wasmd.exe ./cmd/wasmd
 
 install: go.sum
-	go install -mod=readonly $(BUILD_FLAGS) ./cmd/wasmd
+	go build -mod=readonly $(BUILD_FLAGS) -o $(shell go env GOPATH)/bin/lumend ./cmd/wasmd
 
 ########################################
 ### Tools & dependencies
