@@ -226,6 +226,7 @@ localnet-setup:
 	echo "      --validator-pubkey=$$PUB_KEY \\" && \
 	echo "      --validator-privkey=$$PRIV_KEY \\" && \
 	echo "      --accounts-to-fund=$$VAL_ACCOUNT \\" && \
+	echo "      --coins-to-fund=1000000000000ualpha \\" && \
 	echo "      --cosmwasm-admin=$$VAL_ACCOUNT \\" && \
 	echo "      --home $(LUMEND_HOME)"
 
@@ -239,6 +240,7 @@ localnet-start:
 		--validator-pubkey=$$PUB_KEY \
 		--validator-privkey=$$PRIV_KEY \
 		--accounts-to-fund=$$VAL_ACCOUNT \
+		--coins-to-fund=1000000000000ualpha \
 		--cosmwasm-admin=$$VAL_ACCOUNT \
 		--home $(LUMEND_HOME)
 

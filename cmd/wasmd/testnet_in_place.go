@@ -72,8 +72,6 @@ type valArgs struct {
 	newChainID               string
 }
 
-const flagNewChainID = "new-chain-id"
-
 // InPlaceTestnetCmd returns the cobra command for creating an in-place testnet.
 func InPlaceTestnetCmd() *cobra.Command {
 	cmd := server.StartCmd(newTestnetApp, app.DefaultNodeHome)
@@ -90,11 +88,13 @@ Example:
 	`
 	cmd.Args = cobra.ExactArgs(1)
 
-	// Wrap the existing RunE to inject the chain ID positional arg into viper
+	// Wrap the existing RunE to inject the chain ID positional arg into viper.
+	// Setting flags.FlagChainID ensures DefaultBaseappOptions picks it up
+	// directly instead of falling back to the (stale) genesis.json chain ID.
 	originalRunE := cmd.RunE
 	cmd.RunE = func(cmd *cobra.Command, args []string) error {
 		serverCtx := server.GetServerContextFromCmd(cmd)
-		serverCtx.Viper.Set(flagNewChainID, args[0])
+		serverCtx.Viper.Set(flags.FlagChainID, args[0])
 		return originalRunE(cmd, args)
 	}
 
@@ -175,7 +175,7 @@ func getCommandArgs(appOpts servertypes.AppOptions) (valArgs, error) {
 	args.upgradeName = upgradeName
 
 	args.cosmwasmAdmin = cast.ToString(appOpts.Get(flagCosmWasmAdmin))
-	args.newChainID = cast.ToString(appOpts.Get(flagNewChainID))
+	args.newChainID = cast.ToString(appOpts.Get(flags.FlagChainID))
 
 	homeDir := cast.ToString(appOpts.Get(flags.FlagHome))
 	if homeDir == "" {
