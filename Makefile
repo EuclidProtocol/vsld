@@ -190,8 +190,60 @@ proto-lint:
 proto-check-breaking:
 	@$(protoImage) buf breaking --against $(HTTPS_GIT)#branch=main
 
+########################################
+### Local testnet setup
+
+LUMEND_HOME ?= $(HOME)/.lumend
+GENESIS_URL ?= https://so7hoepmu4vbb7pi.public.blob.vercel-storage.com/lumend/genesis.json
+SNAPSHOT_URL ?= http://52.66.213.1:3001/snapshots/latest/download
+CHAIN_ID ?= testing
+
+localnet-setup:
+	@echo "==> Removing old data..."
+	rm -rf $(LUMEND_HOME)
+	@echo "==> Initializing node..."
+	lumend init test --chain-id testing --home=$(LUMEND_HOME)
+	@echo "==> Generating validator operator key..."
+	lumend keys add validator --keyring-backend test --home=$(LUMEND_HOME)
+	@echo "==> Downloading genesis file..."
+	wget -q $(GENESIS_URL) -O $(LUMEND_HOME)/config/genesis.json
+	@echo "==> Setting db_backend to pebbledb..."
+	sed -i.bak 's/^db_backend = "goleveldb"/db_backend = "pebbledb"/' $(LUMEND_HOME)/config/config.toml && rm -f $(LUMEND_HOME)/config/config.toml.bak
+	@echo "==> Downloading and extracting snapshot (this may take a while)..."
+	curl -L $(SNAPSHOT_URL) | lz4 -dc | tar -C $(LUMEND_HOME)/ -xf -
+	@echo "==> Local testnet setup complete."
+	@echo ""
+	@echo "Quick start:"
+	@echo "    make localnet-start"
+	@echo ""
+	@echo "Or run manually:"
+	@VAL_ACCOUNT=$$(lumend keys show validator -a --keyring-backend test --home=$(LUMEND_HOME) 2>/dev/null) && \
+	VAL_OPERATOR=$$(lumend keys show validator --bech val -a --keyring-backend test --home=$(LUMEND_HOME) 2>/dev/null) && \
+	PRIV_KEY=$$(python3 -c "import json; print(json.load(open('$(LUMEND_HOME)/config/priv_validator_key.json'))['priv_key']['value'])" 2>/dev/null) && \
+	PUB_KEY=$$(python3 -c "import json; print(json.load(open('$(LUMEND_HOME)/config/priv_validator_key.json'))['pub_key']['value'])" 2>/dev/null) && \
+	echo "    lumend in-place-testnet $(CHAIN_ID) \\" && \
+	echo "      --validator-operator=$$VAL_OPERATOR \\" && \
+	echo "      --validator-pubkey=$$PUB_KEY \\" && \
+	echo "      --validator-privkey=$$PRIV_KEY \\" && \
+	echo "      --accounts-to-fund=$$VAL_ACCOUNT \\" && \
+	echo "      --cosmwasm-admin=$$VAL_ACCOUNT \\" && \
+	echo "      --home $(LUMEND_HOME)"
+
+localnet-start:
+	@VAL_ACCOUNT=$$(lumend keys show validator -a --keyring-backend test --home=$(LUMEND_HOME) 2>/dev/null) && \
+	VAL_OPERATOR=$$(lumend keys show validator --bech val -a --keyring-backend test --home=$(LUMEND_HOME) 2>/dev/null) && \
+	PRIV_KEY=$$(python3 -c "import json; print(json.load(open('$(LUMEND_HOME)/config/priv_validator_key.json'))['priv_key']['value'])" 2>/dev/null) && \
+	PUB_KEY=$$(python3 -c "import json; print(json.load(open('$(LUMEND_HOME)/config/priv_validator_key.json'))['pub_key']['value'])" 2>/dev/null) && \
+	lumend in-place-testnet $(CHAIN_ID) \
+		--validator-operator=$$VAL_OPERATOR \
+		--validator-pubkey=$$PUB_KEY \
+		--validator-privkey=$$PRIV_KEY \
+		--accounts-to-fund=$$VAL_ACCOUNT \
+		--cosmwasm-admin=$$VAL_ACCOUNT \
+		--home $(LUMEND_HOME)
+
 .PHONY: all install install-debug \
 	go-mod-cache draw-deps clean build format \
 	test test-all test-build test-cover test-unit test-race \
 	test-sim-import-export build-windows-client \
-	test-system
+	test-system localnet-setup localnet-start
