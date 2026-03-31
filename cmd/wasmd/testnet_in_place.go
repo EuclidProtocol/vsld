@@ -9,9 +9,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/spf13/cast"
-	"github.com/spf13/cobra"
-
 	cometdbm "github.com/cometbft/cometbft-db"
 	"github.com/cometbft/cometbft/crypto"
 	tmd25519 "github.com/cometbft/cometbft/crypto/ed25519"
@@ -21,8 +18,9 @@ import (
 	sm "github.com/cometbft/cometbft/state"
 	"github.com/cometbft/cometbft/store"
 	tmtypes "github.com/cometbft/cometbft/types"
-
 	dbm "github.com/cosmos/cosmos-db"
+	"github.com/spf13/cast"
+	"github.com/spf13/cobra"
 
 	"cosmossdk.io/log"
 	"cosmossdk.io/math"
@@ -34,8 +32,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/server"
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	genutiltypes "github.com/cosmos/cosmos-sdk/x/genutil/types"
 	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
+	genutiltypes "github.com/cosmos/cosmos-sdk/x/genutil/types"
 	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
 	slashingtypes "github.com/cosmos/cosmos-sdk/x/slashing/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
@@ -397,7 +395,7 @@ func updateApplicationState(wasmApp *app.WasmApp, args valArgs) error {
 		return err
 	}
 
-	ctx := wasmApp.BaseApp.NewUncachedContext(true, tmproto.Header{})
+	ctx := wasmApp.NewUncachedContext(true, tmproto.Header{})
 
 	// STAKING — replace validator set
 	newVal := stakingtypes.Validator{
