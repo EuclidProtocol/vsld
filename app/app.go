@@ -144,6 +144,10 @@ var (
 	Bech32Prefix = "euclid"
 )
 
+func init() {
+	wasmtypes.MaxWasmSize = 2 * 1024 * 1024 // 2MB
+}
+
 // These constants are derived from the above variables.
 // These are the ones we will want to use in the code, based on
 // any overrides above
