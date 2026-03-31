@@ -126,7 +126,7 @@ func TestAppImportExport(t *testing.T) {
 	appOptions[flags.FlagHome] = t.TempDir() // ensure a unique folder for the new app
 
 	newApp := NewWasmApp(log.NewNopLogger(), newDB, nil, true, appOptions, emptyWasmOpts, fauxMerkleModeOpt, baseapp.SetChainID(SimAppChainID))
-	require.Equal(t, "WasmApp", newApp.Name())
+	require.Equal(t, "LumenApp", newApp.Name())
 
 	initReq := &abci.RequestInitChain{
 		AppStateBytes: exported.AppState,
@@ -240,7 +240,7 @@ func TestAppSimulationAfterImport(t *testing.T) {
 	}()
 
 	newApp := NewWasmApp(log.NewNopLogger(), newDB, nil, true, appOptions, emptyWasmOpts, fauxMerkleModeOpt, baseapp.SetChainID(SimAppChainID))
-	require.Equal(t, "WasmApp", newApp.Name())
+	require.Equal(t, "LumenApp", newApp.Name())
 
 	_, err = newApp.InitChain(&abci.RequestInitChain{
 		ChainId:       SimAppChainID,
@@ -282,7 +282,7 @@ func setupSimulationApp(t *testing.T, msg string) (simtypes.Config, dbm.DB, simt
 	appOptions[server.FlagInvCheckPeriod] = simcli.FlagPeriodValue
 
 	app := NewWasmApp(logger, db, nil, true, appOptions, emptyWasmOpts, fauxMerkleModeOpt, baseapp.SetChainID(SimAppChainID))
-	require.Equal(t, "WasmApp", app.Name())
+	require.Equal(t, "LumenApp", app.Name())
 	return config, db, appOptions, app
 }
 
