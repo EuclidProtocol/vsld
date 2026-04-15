@@ -170,28 +170,113 @@ Trade results from the offchain engine are batched and submitted to the module p
 
 Settlement transactions are submitted by an authorized **settlement relayer** (the engine operator or a set of authorized addresses). The module validates every trade cryptographically — the relayer cannot fabricate trades.
 
+## Allowance Reduction Race Condition [WIP]
+
+> **Status: WIP** — This section describes the current design for preventing a critical race condition between fast-lane fills and allowance reductions. The approach uses EndBlocker ordering guarantees with a short grace period. Further analysis and testing may refine the grace period duration and edge case handling.
+
+A race condition exists between the fast lane and allowance reductions. Fast-lane order fills are tracked only in the engine's memory, not in the module's `reserved` field. Without mitigation, a user could reduce their allowance and withdraw funds before the engine's settlement batch reaches the chain:
+
+```
+t=0s    User has 1000 USDC allowance (locked in contract)
+        Module state:  allowance=1000, reserved=0
+        Engine state:  engine_reserved=1000 (fast-lane order placed + filled)
+
+t=1s    User submits MsgReduceTradingAllowance { target: 0 }
+        Module checks: target (0) >= reserved (0) ← PASSES (module can't see engine state)
+        Module calls SudoMsg::Unlock { 1000 USDC }
+
+t=2s    User withdraws 1000 USDC from contract via ExecuteMsg
+
+t=5s    Relayer submits MsgSettleTrades for the filled order
+        Module calls SudoMsg::Transfer — FAILS, funds are gone
+        Counterparty doesn't get paid
+```
+
+### Solution: EndBlocker Ordering with Grace Period
+
+Allowance reductions are never processed immediately during message handling. Instead, they are queued as `PendingReduction` entries and processed in `EndBlocker` — which guarantees that **settlements are always processed before reductions** within the same block.
+
+```
+MsgReduceTradingAllowance (during tx processing):
+  → Stores PendingReduction { user, denom, target, effective_height: current + grace_period }
+  → Emits EventReductionRequested
+  → Does NOT unlock anything yet
+
+MsgSettleTrades (during tx processing):
+  → Processed immediately: transfers tokens, updates reserved amounts
+  → (Settlements are not deferred — they take effect in the block they arrive)
+
+EndBlocker (every block):
+  1. For each PendingReduction where current_height >= effective_height:
+     a. Check: target_allowance >= module.reserved
+     b. If yes → compute delta, call SudoMsg::Unlock, update lien ledger, delete pending entry
+     c. If no → keep pending (engine still has outstanding settlements to submit)
+```
+
+The `grace_period` is a module parameter (e.g., 2-3 blocks). This gives the engine time to react:
+
+```
+Block N:    MsgReduceTradingAllowance queued. EventReductionRequested emitted.
+Block N+1:  Engine sees event, stops new orders for this user, submits final MsgSettleTrades.
+            Settlements processed immediately during tx handling, updating module.reserved.
+Block N+2:  EndBlocker: grace period reached. Checks target >= reserved (now up-to-date). Processes reduction.
+```
+
+With ~5-6s block times, this is a ~10-15 second delay for reductions. Compared to the current merkle proof withdrawal flow, this is effectively instant.
+
+### Engine Liveness: Max Grace Period
+
+If the engine is down and cannot submit settlements, pending reductions remain queued indefinitely (the `reserved` check keeps failing). To prevent permanent fund lockup, a `max_grace_period` module parameter (e.g., 1000 blocks / ~1.5 hours) force-processes reductions after maximum wait:
+
+```
+EndBlocker:
+  For each PendingReduction:
+    if current_height >= effective_height + max_grace_period:
+      // Force-process: accept potential settlement loss to preserve user fund access
+      // Engine had ample time to settle — if it didn't, that's an engine liveness issue
+      Force unlock via SudoMsg::Unlock, clear pending entry
+    elif current_height >= effective_height:
+      // Normal path: check reserved before unlocking
+      if target >= reserved: process reduction
+      else: keep waiting
+```
+
+> **WIP Note:** The `max_grace_period` force-unlock creates a window where counterparty settlements could fail if the engine was down for the entire period. Potential mitigations under consideration:
+> - Insurance fund to cover force-unlocked settlements
+> - Slashing mechanism for engine operators who fail to submit timely settlements
+> - Partial force-unlock (only unlock the un-reserved portion, keep reserved locked)
+
+### Engine Behavior on Reduction Request
+
+When the engine receives `EventReductionRequested`:
+
+1. **Stop accepting new fast-lane orders** for the user beyond the target allowance
+2. **Submit final settlement batch** for any filled trades involving this user
+3. **Cancel any open fast-lane orders** that would exceed the target allowance
+
+This is coordinated via the existing event subscription — no new communication channel needed.
+
 ## Messages
 
 ### MsgSetTradingAllowance
 
-Sets or replaces the user's trading allowance for a given denomination.
+Sets or increases the user's trading allowance for a given denomination. Increases are processed immediately (same block). To reduce an allowance, use `MsgReduceTradingAllowance`.
 
 ```protobuf
 message MsgSetTradingAllowance {
   string sender = 1;
   string denom = 2;
-  string amount = 3;  // sdk.Int as string
+  string amount = 3;  // sdk.Int as string, must be >= current allowance
 }
 ```
 
 **Validation:**
-- User's available balance in the contract (queried via Sudo) must be sufficient to cover the increase
-- Allowance cannot be reduced below the user's currently reserved amount (open orders + unsettled trades)
+- Requested amount must be >= current allowance (use `MsgReduceTradingAllowance` to decrease)
+- User's available (unlocked) balance in the contract must be sufficient to cover the increase delta
 
 **State changes:**
 - Updates the lien ledger: `(user, denom) → allowance_amount`
-- Calls `SudoMsg::Lock` on the balance contract for any increase
-- Calls `SudoMsg::Unlock` on the balance contract for any decrease
+- Calls `SudoMsg::Lock` on the balance contract for the increase delta
 
 ### MsgPlaceOrder (Slow Lane)
 
@@ -232,6 +317,27 @@ message MsgCancelOrder {
 **State changes:**
 - Releases reserved collateral: `reserved -= order_collateral`
 - Emits `EventOrderCancelled` for the offchain engine to consume
+
+### MsgReduceTradingAllowance
+
+Requests a reduction of the user's trading allowance. The reduction is **not immediate** — it is queued as a `PendingReduction` and processed in `EndBlocker` after a grace period, ensuring the engine has time to submit outstanding settlements. See [Allowance Reduction Race Condition](#allowance-reduction-race-condition-wip) for details.
+
+```protobuf
+message MsgReduceTradingAllowance {
+  string sender = 1;
+  string denom = 2;
+  string target_amount = 3;  // desired new allowance (must be < current allowance)
+}
+```
+
+**Validation:**
+- Target amount must be < current allowance (use `MsgSetTradingAllowance` to increase)
+- Only one pending reduction per `(user, denom)` at a time (submit a new one to replace)
+
+**State changes:**
+- Stores `PendingReduction { user, denom, target, effective_height: current + grace_period }`
+- Emits `EventReductionRequested { user, denom, current_allowance, target, effective_height }`
+- Does NOT call `SudoMsg::Unlock` — that happens in `EndBlocker`
 
 ### MsgSettleTrades (Relayer-Only)
 
@@ -499,6 +605,15 @@ Key:   TradeSeqPrefix | pair_id
 Value: { last_settled_seq: uint64 }
 ```
 
+### Pending Reductions
+
+```
+Key:   PendingReductionPrefix | user_address | denom
+Value: { target_allowance: Int, effective_height: int64, requested_height: int64 }
+```
+
+Only one pending reduction per `(user, denom)` at a time. Submitting a new one replaces the previous. Processed in `EndBlocker` when `current_height >= effective_height` and `target_allowance >= reserved`.
+
 ### Pair Configuration
 
 ```
@@ -584,14 +699,26 @@ The `locked` field is only modifiable via `SudoMsg::Lock` and `SudoMsg::Unlock` 
 ### Reducing Allowance ("Withdrawal")
 
 ```
-1. User submits MsgSetTradingAllowance { denom: "usdc", amount: "500" }
+Block N:
+1. User submits MsgReduceTradingAllowance { denom: "usdc", target: 500 }
    (reducing from 1000 to 500)
-2. Module checks: new allowance (500) >= reserved (200) ✓
-3. Module calls SudoMsg::Unlock { user, denom: "usdc", amount: 500 }
-4. Contract unlocks 500 USDC — user can now withdraw it via ExecuteMsg
+2. Module stores PendingReduction { target: 500, effective_height: N + grace_period }
+3. Module emits EventReductionRequested
+4. Funds remain LOCKED — no unlock yet
+
+Block N+1:
+5. Engine sees EventReductionRequested
+6. Engine stops accepting new fast-lane orders beyond 500 USDC for this user
+7. Engine submits MsgSettleTrades for any remaining filled trades
+8. Module processes settlements immediately, updates reserved amounts
+
+Block N + grace_period:
+9. EndBlocker checks: target (500) >= reserved (now 200 after settlements) ✓
+10. Module calls SudoMsg::Unlock { user, denom: "usdc", amount: 500 }
+11. Contract unlocks 500 USDC — user can now withdraw via ExecuteMsg
 ```
 
-No merkle proofs, no permits, no waiting for operator confirmation. Effective in the same block.
+No merkle proofs, no permits, no operator key. Grace period is ~2-3 blocks (~10-15s) — effectively instant compared to the current withdrawal flow.
 
 ### CosmWasm Contract Interaction
 
@@ -680,9 +807,17 @@ Edge cases to guard against:
 - **Multiple modules**: If other modules also call Sudo on the balance contract, ensure lock accounting doesn't conflict
 - **Reentrancy**: Ensure the balance contract's Sudo handlers cannot be reentered via submessages
 
+### Allowance Reduction Race Condition
+
+Fast-lane fills exist only in engine memory, not in the module's `reserved` field. Without mitigation, a user could reduce their allowance and withdraw before settlements arrive on-chain. This is solved by the deferred reduction mechanism — see [Allowance Reduction Race Condition](#allowance-reduction-race-condition-wip). Reductions are queued and processed in `EndBlocker` after a grace period, ensuring the engine has time to submit outstanding settlements.
+
+### Engine Liveness
+
+If the engine is unresponsive, pending reductions remain queued because the `reserved` check keeps failing (no settlements arrive to reduce `reserved`). The `max_grace_period` parameter (e.g., 1000 blocks / ~1.5 hours) acts as an escape hatch — after this window, reductions are force-processed regardless of `reserved` state. This ensures users can always recover funds even if the engine is permanently down, at the cost of potential unsettled trade losses. See the WIP notes in the race condition section for mitigation strategies.
+
 ### Allowance Griefing
 
-A user cannot set an allowance for tokens they don't have — the module queries the contract's available balance at allowance creation time. They also cannot reduce their allowance below the reserved amount, preventing them from pulling funds out from under open orders.
+A user cannot set an allowance for tokens they don't have — the module queries the contract's available balance at allowance creation time. Reductions are deferred via the grace period mechanism, so users cannot pull funds out from under in-flight trades.
 
 ## What This Eliminates
 
@@ -696,7 +831,7 @@ A user cannot set an allowance for tokens they don't have — the module queries
 | Operator trust assumption | Required for withdrawals | Removed |
 | Kafka for balance updates | Required | Replaced by gRPC events |
 | Separate orderbook balance | User manages two balances | Single contract balance with lien |
-| Withdrawal latency | Merkle proof + chain tx + watcher | Same-block (reduce allowance → unlock) |
+| Withdrawal latency | Merkle proof + chain tx + watcher | ~2-3 blocks / ~10-15s (grace period → unlock) |
 | First-trade setup | Deposit tx + wait for listener | Single tx (set allowance + place order) |
 | CosmWasm composability | Not possible | Full atomic composability via custom messages |
 
