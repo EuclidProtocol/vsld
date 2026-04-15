@@ -708,3 +708,50 @@ A user cannot set an allowance for tokens they don't have — the module queries
 | Offchain engine | Sub-second order matching (existing) |
 | Account-service | Can be retained for read-model / analytics, but no longer in the settlement path |
 | Engine WAL + snapshots | Durability for the offchain matching engine (existing) |
+
+## Known Race Condition: Fast-Lane Reservation vs Allowance Reduction
+
+As written, the design introduces a distributed race between the engine's local fast-lane reservation state and the module's on-chain allowance state.
+
+### How It Works
+
+1. A user has a confirmed on-chain allowance of `1000 USDC`.
+2. The user submits a fast-lane order directly to the engine for `900 USDC` of collateral.
+3. The engine accepts the order immediately and records `engine_reserved = 900` in its local `AccountCache`.
+4. Before the next settlement batch is submitted on-chain, the user sends `MsgSetTradingAllowance` reducing their allowance from `1000` to `100`.
+5. The module checks its on-chain `reserved` amount. If fast-lane reservations only exist in engine-local state and are not yet reflected in module state, the module may see little or no reserved amount and allow the reduction.
+6. Later, the engine submits a settlement batch for the previously matched fast-lane trade.
+7. The module re-validates the trade against the user's current on-chain allowance and rejects settlement because the allowance has already been reduced below what the trade requires.
+
+### Why It Happens
+
+The root cause is that fast-lane admission and final settlement do not update the same state atomically:
+
+- Fast-lane order acceptance uses the engine's local cache and `engine_reserved`.
+- Allowance reduction is authorized by the module using on-chain lien state.
+- Settlement is validated later against the then-current on-chain allowance.
+
+If fast-lane reservations are not written on-chain before allowance reductions are allowed, the user can change the authoritative state between match time and settlement time. This does not let the user steal funds because the module still enforces the allowance check at settlement, but it can cause rejected settlements, stale engine state, forced unwinds/cancels, and reconciliation complexity.
+
+## Known Issue: Cancel/Replace Friction for Market Makers
+
+Any design that tries to coordinate fast-lane balance reuse through on-chain confirmation, epoch bumps, or drain barriers introduces another problem for market makers who constantly cancel and replace quotes.
+
+### How It Works
+
+1. A market maker has an existing fast-lane order resting on the book.
+2. The market moves and the market maker wants to cancel that order and immediately place a replacement at a new price.
+3. If the freed balance from the cancel is not reusable until the module confirms the cancel, drain, or epoch transition on-chain, the market maker must wait for block confirmation before placing the replacement order.
+4. That wait breaks normal market-making behavior, because quote refresh and cancel/replace loops happen much faster than block cadence.
+5. If the engine instead allows the replacement order to be placed optimistically before the previous order's balance is fully released in shared state, then both the old and new orders can temporarily coexist against different views of available balance.
+6. During that window, one or both orders can be matched, and the final inventory / collateral delta can shift away from the trader's intended "replace" semantics.
+
+### Why It Happens
+
+The root cause is that cancel and replace are not a single atomic operation across the engine and the module:
+
+- The engine wants sub-second local quote updates.
+- The module serializes authoritative balance changes at block cadence.
+- Reusing balance from a cancelled order requires both sides to agree that the old order is no longer consuming that balance.
+
+If balance release is made strictly synchronous with on-chain confirmation, market-making becomes too slow. If balance release is made optimistic, the trader can temporarily over-post liquidity and end up with unintended fills or a shifted final net delta. This makes high-frequency quote management much harder even if settlement safety is preserved.
